@@ -28,6 +28,9 @@ func MakeEmpty() Texture {
 
 // Make creates a texture the given width and height.
 // Internalformat, format and pixelType specifed the layout of the data.
+// Internalformat is the format of the texture on the GPU.
+// Format is the format of the pixeldata that provided to this function.
+// Pixeltype specifies the data type of a single component of the pixeldata.
 // Data is pointing to the data that is going to be uploaded.
 // Min and mag specify the behaviour when down and upscaling the texture.
 // S and t specify the behaviour at the borders of the image.
@@ -235,7 +238,7 @@ func Make3DFromImage(image3d *image3d.Image3D, internalformat int32, format uint
 		image3d.GetPixelType(), gl.Ptr(data), gl.NEAREST, gl.NEAREST, gl.CLAMP_TO_EDGE, gl.CLAMP_TO_EDGE, gl.CLAMP_TO_EDGE), nil
 }
 
-// Make3DFromImage creates a 3D texture with the data of the 3D image.
+// Make3DFromData creates a 3D texture with the data of the 3D image.
 func Make3DFromData(data []uint8, width, height, slices int, internalformat int32, format uint32) (Texture, error) {
 	return Make3D(int32(width), int32(height), int32(slices), internalformat, format,
 		gl.UNSIGNED_BYTE, gl.Ptr(data), gl.NEAREST, gl.NEAREST, gl.CLAMP_TO_EDGE, gl.CLAMP_TO_EDGE, gl.CLAMP_TO_EDGE), nil
@@ -255,7 +258,7 @@ func (tex *Texture) GenMipmap() {
 	tex.Unbind()
 }
 
-// GenMipmap generates mipmap levels.
+// GenMipmapNearest generates mipmap levels.
 // Chooses the mipmap that most closely matches the size of the pixel being textured and uses the GL_LINEAR criterion to produce a texture value.
 func (tex *Texture) GenMipmapNearest() {
 	tex.Bind(0)
@@ -264,7 +267,15 @@ func (tex *Texture) GenMipmapNearest() {
 	tex.Unbind()
 }
 
-// Sets the behavior at the 1D texure borders
+// SetMinMagFilter sets the filter to determine which behaviour is used for level of detail functions.
+func (tex *Texture) SetMinMagFilter(min, mag int32) {
+	tex.Bind(0)
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, min)
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, mag)
+	tex.Unbind()
+}
+
+// SetWrap1D sets the behavior at the 1D texure borders
 func (tex *Texture) SetWrap1D(s int32) {
 	tex.Bind(0)
 	gl.TexParameteri(gl.TEXTURE_1D, gl.TEXTURE_WRAP_S, s)

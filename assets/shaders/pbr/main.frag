@@ -38,6 +38,7 @@ out vec3 outColor;
 #include "util.glsl"
 #include "brdf.glsl"
 #include "pbr.glsl"
+#include "tonemapping.glsl"
 
 void main(){
     // ray from the camera to the intersection point
@@ -86,5 +87,5 @@ void main(){
         // trace the ray and calculate resulting color
         color += trace(w0, wi, pbr, micro, rand);
     }
-    outColor = color / uSamples;
+    outColor = tone_mapping(color / uSamples);
 }

@@ -5,6 +5,10 @@ float saturate(float val) {
     return max(0, min(1, val));
 }
 
+vec3 saturate(vec3 val) {
+    return max(vec3(0), min(vec3(1), val));
+}
+
 /**
  * returns a random normal following a cosine distribution
  */

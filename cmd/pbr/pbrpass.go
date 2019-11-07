@@ -1,7 +1,8 @@
 package main
 
 import (
-	"github.com/adrianderstroff/pbr/pkg/cgm"
+	"math"
+
 	"github.com/adrianderstroff/pbr/pkg/core/gl"
 	"github.com/adrianderstroff/pbr/pkg/core/shader"
 	"github.com/adrianderstroff/pbr/pkg/scene/camera"
@@ -15,8 +16,7 @@ type RaymarchingPass struct {
 	raymarchshader shader.Shader
 	cubemap        texture.Texture
 	// uniform variables
-	globaldensity  float32
-	globalcoverage float32
+	samples int32
 	// pbr textures
 	albedotexture    texture.Texture
 	normaltexture    texture.Texture
@@ -26,6 +26,7 @@ type RaymarchingPass struct {
 	noisetexture     texture.Texture
 }
 
+// MakePbrPass creates a pbr pass
 func MakePbrPass(width, height int, shaderpath, texturepath string, cubemap *texture.Texture) RaymarchingPass {
 	// create shaders
 	box := box.Make(1, 1, 1, false, gl.TRIANGLES)
@@ -40,33 +41,38 @@ func MakePbrPass(width, height int, shaderpath, texturepath string, cubemap *tex
 	if err != nil {
 		panic(err)
 	}
+	albedotexture.GenMipmap()
 	normaltexture, err := texture.MakeFromPath(texturepath+"/normal.png", gl.RGBA, gl.RGBA)
 	if err != nil {
 		panic(err)
 	}
-	metallictexture, err := texture.MakeFromPath(texturepath+"/metallic.png", gl.RGBA, gl.RGBA)
+	normaltexture.GenMipmap()
+	metallictexture, err := texture.MakeFromPath(texturepath+"/metallic.png", gl.RGBA, gl.RED)
 	if err != nil {
 		panic(err)
 	}
-	roughnesstexture, err := texture.MakeFromPath(texturepath+"/roughness.png", gl.RGBA, gl.RGBA)
+	metallictexture.GenMipmap()
+	roughnesstexture, err := texture.MakeFromPath(texturepath+"/roughness.png", gl.RGBA, gl.RED)
 	if err != nil {
 		panic(err)
 	}
+	roughnesstexture.GenMipmap()
 	aotexture, err := texture.MakeFromPath(texturepath+"/ao.png", gl.RGBA, gl.RGBA)
 	if err != nil {
 		panic(err)
 	}
+	aotexture.GenMipmap()
 	noisetexture, err := MakeNoiseTexture(width, height)
 	if err != nil {
 		panic(err)
 	}
+	noisetexture.GenMipmap()
 
 	return RaymarchingPass{
 		raymarchshader: raymarchshader,
 		cubemap:        *cubemap,
 		// uniform variables
-		globaldensity:  0.5,
-		globalcoverage: 0.5,
+		samples: 10,
 		// pbr textures
 		albedotexture:    albedotexture,
 		normaltexture:    normaltexture,
@@ -77,6 +83,7 @@ func MakePbrPass(width, height int, shaderpath, texturepath string, cubemap *tex
 	}
 }
 
+// Render does the pbr pass
 func (rmp *RaymarchingPass) Render(camera camera.Camera) {
 	rmp.cubemap.Bind(0)
 	rmp.albedotexture.Bind(1)
@@ -122,24 +129,16 @@ func (rmp *RaymarchingPass) OnMouseScroll(x, y float64) bool {
 func (rmp *RaymarchingPass) OnKeyPress(key, action, mods int) bool {
 	// update global density
 	if key == int(glfw.KeyQ) {
-		rmp.globaldensity -= 0.01
-	} else if key == int(glfw.KeyE) {
-		rmp.globaldensity += 0.01
+		rmp.samples--
+		rmp.samples = int32(math.Max(1, float64(rmp.samples)))
+	} else if key == int(glfw.KeyW) {
+		rmp.samples++
+		rmp.samples = int32(math.Min(20, float64(rmp.samples)))
 	}
-	rmp.globaldensity = cgm.Clamp(rmp.globaldensity, 0, 1)
-
-	// update global coverage
-	if key == int(glfw.KeyZ) {
-		rmp.globalcoverage -= 0.01
-	} else if key == int(glfw.KeyC) {
-		rmp.globalcoverage += 0.01
-	}
-	rmp.globalcoverage = cgm.Clamp(rmp.globalcoverage, 0, 1)
 
 	// update uniforms
 	rmp.raymarchshader.Use()
-	rmp.raymarchshader.UpdateFloat32("uGlobalDensity", rmp.globaldensity)
-	rmp.raymarchshader.UpdateFloat32("uGlobalCoverage", rmp.globalcoverage)
+	rmp.raymarchshader.UpdateInt32("uSamples", rmp.samples)
 	rmp.raymarchshader.Release()
 
 	return false
