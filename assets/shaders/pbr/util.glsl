@@ -38,3 +38,17 @@ vec3 determine_direction(vec3 dir, vec3 center, vec3 intersection) {
 
 	return normalize(new_intersection - center);
 }
+
+// calculates the intersection between a ray and an axis aligned box
+vec3 ray_box_intersection(const vec3 boxMin, const vec3 boxMax, const vec3 o, const vec3 dir) {
+	vec3 d = (-1) * dir;
+	
+	vec3 tMin = (boxMin - o) / d;
+    vec3 tMax = (boxMax - o) / d;
+    vec3 t1 = min(tMin, tMax);
+    vec3 t2 = max(tMin, tMax);
+    float tNear = max(max(t1.x, t1.y), t1.z);
+    float tFar = min(min(t2.x, t2.y), t2.z);
+    //return vec2(tNear, tFar);
+	return o + tNear * d;
+}

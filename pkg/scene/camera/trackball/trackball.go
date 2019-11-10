@@ -26,6 +26,7 @@ type Trackball struct {
 	Far    float32
 
 	leftButtonPressed bool
+	zoomsensitivity   float32
 }
 
 // MakeDefault creates a Trackball with the viewport of width and height and a radius from the origin.
@@ -52,15 +53,16 @@ func NewDefault(width, height int, radius float32) *Trackball {
 // the target position the camera is orbiting around, the field of view and the distance of the near and far plane.
 func Make(width, height int, radius float32, target mgl32.Vec3, fov, near, far float32) Trackball {
 	camera := Trackball{
-		width:  width,
-		height: height,
-		radius: radius,
-		theta:  90.0,
-		phi:    90.0,
-		Target: target,
-		Fov:    fov,
-		Near:   near,
-		Far:    far,
+		width:           width,
+		height:          height,
+		radius:          radius,
+		theta:           90.0,
+		phi:             90.0,
+		Target:          target,
+		Fov:             fov,
+		Near:            near,
+		Far:             far,
+		zoomsensitivity: 0.1,
 	}
 	camera.Update()
 
@@ -109,7 +111,7 @@ func (camera *Trackball) Rotate(theta, phi float32) {
 
 // Zoom changes the radius of the camera to the target point.
 func (camera *Trackball) Zoom(distance float32) {
-	camera.radius -= distance
+	camera.radius -= distance * camera.zoomsensitivity
 	// limit radius
 	if camera.radius < 0.1 {
 		camera.radius = 0.1

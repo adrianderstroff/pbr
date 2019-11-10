@@ -3,6 +3,7 @@ package main
 import (
 	"runtime"
 
+	"github.com/adrianderstroff/pbr/pkg/core/gl"
 	"github.com/adrianderstroff/pbr/pkg/core/interaction"
 	"github.com/adrianderstroff/pbr/pkg/core/window"
 	"github.com/adrianderstroff/pbr/pkg/scene/camera/trackball"
@@ -37,6 +38,8 @@ func main() {
 	cubemappass := MakeCubemapPass(SHADER_PATH, CUBEMAP_PATH)
 	pbrpass := MakePbrPass(WIDTH, HEIGHT, SHADER_PATH, TEX_PATH, &cubemappass.cubemap)
 	interaction.AddInteractable(&pbrpass)
+
+	gl.Disable(gl.CULL_FACE)
 
 	// render loop
 	renderloop := func() {

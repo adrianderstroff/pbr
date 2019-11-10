@@ -66,9 +66,15 @@ vec3 trace(vec3 w0, vec3 wi, PbrMaterial pbr, in Microfacet micro, Rand rand) {
 
     // determine indirect illumination
     wi = reflect(w0, micro.l);
-    vec3 envLookupDir = determine_direction(wi, vec3(0,0,0), i.pos);
+    vec3 cubeMin = vec3(-30);
+    vec3 cubeMax = vec3(30);
+    vec3 intersection = ray_box_intersection(cubeMin, cubeMax, i.pos, wi);
+    vec3 envLookupDir = normalize(intersection - vec3(0));
     vec3 envColor = vec3(texture(cubemap, envLookupDir));
 
     // calculate resulting color
     return attenuation * envColor;
+
+    //return (micro.l + 1) / 2;
+    //return envColor;
 }

@@ -36,6 +36,7 @@ out vec3 outColor;
 //--------------------------------------------------------------------------//
 #include "constants.glsl"
 #include "util.glsl"
+#include "color.glsl"
 #include "brdf.glsl"
 #include "pbr.glsl"
 #include "tonemapping.glsl"
@@ -73,7 +74,7 @@ void main(){
     rand.r2 = texture(noiseTexture, i.uv).z;
     rand.kd = saturate(length(f));
     //rand.kd = 1.0;
-    rand.ks = 1.0 - rand.kd;
+    rand.ks = saturate(1.0 - rand.kd);
 
     // calculate for multiple samples
     vec3 color = vec3(0);
