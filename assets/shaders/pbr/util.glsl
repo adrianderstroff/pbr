@@ -1,3 +1,5 @@
+#include "constants.glsl"
+
 /**
  * util function to clamp a value between 0 and 1
  */
@@ -49,6 +51,6 @@ vec3 ray_box_intersection(const vec3 boxMin, const vec3 boxMax, const vec3 o, co
     vec3 t2 = max(tMin, tMax);
     float tNear = max(max(t1.x, t1.y), t1.z);
     float tFar = min(min(t2.x, t2.y), t2.z);
-    //return vec2(tNear, tFar);
+
 	return o + tNear * d;
 }

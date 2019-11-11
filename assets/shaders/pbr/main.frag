@@ -34,17 +34,15 @@ out vec3 outColor;
 //--------------------------------------------------------------------------//
 // includes                                                                 //
 //--------------------------------------------------------------------------//
-#include "constants.glsl"
 #include "util.glsl"
-#include "color.glsl"
-#include "brdf.glsl"
 #include "pbr.glsl"
 #include "tonemapping.glsl"
 
 void main(){
     // ray from the camera to the intersection point
     vec3 w0 = normalize(i.pos - uCameraPos);
-    vec3 wi = reflect(w0, i.normal);
+    vec3 n = normalize(i.normal);
+    vec3 wi = reflect(w0, n);
 
     // grab pbr properties
     PbrMaterial pbr;
@@ -55,11 +53,12 @@ void main(){
     pbr.ao        = texture(aoTexture,          i.uv).x;
     pbr.f0        = mix(vec3(0.04), pbr.albedo, pbr.metallic);
     pbr.a         = pbr.roughness;
+    pbr.a = 0.125;
     pbr.k         = (pbr.a * pbr.a) / 2.0;
 
     // grab all relevant vectors and the roughness
     Microfacet micro;
-    micro.n = normalize(i.normal);
+    micro.n = n;
     micro.l = normalize(wi);
     micro.v = normalize(-w0);
     micro.h = normalize(micro.l + micro.v);
@@ -72,9 +71,9 @@ void main(){
     rand.r  = texture(noiseTexture, i.uv).x;
     rand.r1 = texture(noiseTexture, i.uv).y;
     rand.r2 = texture(noiseTexture, i.uv).z;
-    rand.kd = saturate(length(f));
-    //rand.kd = 1.0;
-    rand.ks = saturate(1.0 - rand.kd);
+    rand.ks = saturate(length(f));
+    rand.kd = 0.0;
+    rand.kd = saturate(1.0 - rand.ks);
 
     // calculate for multiple samples
     vec3 color = vec3(0);
@@ -88,5 +87,6 @@ void main(){
         // trace the ray and calculate resulting color
         color += trace(w0, wi, pbr, micro, rand);
     }
-    outColor = tone_mapping(color / uSamples);
+    outColor = color / uSamples;
+    outColor = tone_mapping(outColor);
 }

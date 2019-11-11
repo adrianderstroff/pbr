@@ -79,8 +79,8 @@ func Make(width, height, depth float32, inside bool) geometry.Geometry {
 	left := []float32{-1.0, 0.0, 0.0}
 	top := []float32{0.0, 1.0, 0.0}
 	bottom := []float32{0.0, -1.0, 0.0}
-	front := []float32{0.0, 0.0, -1.0}
-	back := []float32{0.0, 0.0, 1.0}
+	front := []float32{0.0, 0.0, 1.0}
+	back := []float32{0.0, 0.0, -1.0}
 	// swap normals if inside is true
 	if inside {
 		right, left = left, right
