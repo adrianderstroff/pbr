@@ -2,6 +2,7 @@ package main
 
 import (
 	"runtime"
+	"strconv"
 
 	"github.com/adrianderstroff/pbr/pkg/core/gl"
 	"github.com/adrianderstroff/pbr/pkg/core/interaction"
@@ -44,7 +45,7 @@ func main() {
 	// render loop
 	renderloop := func() {
 		// update title
-		window.SetTitle(title + " " + window.GetFPSFormatted())
+		window.SetTitle(title + " " + window.GetFPSFormatted() + " " + strconv.Itoa(int(pbrpass.samples)))
 
 		// update camera
 		camera.Update()

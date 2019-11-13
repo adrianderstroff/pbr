@@ -31,3 +31,13 @@ func Floor32(a float32) float32 {
 func Mod32(a, b float32) float32 {
 	return float32(math.Mod(float64(a), float64(b)))
 }
+
+// Sin32 is a float32 variant of math.Sin which is float64
+func Sin32(a float32) float32 {
+	return float32(math.Sin(float64(a)))
+}
+
+// Cos32 is a float32 variant of math.Cos which is float64
+func Cos32(a float32) float32 {
+	return float32(math.Cos(float64(a)))
+}

@@ -14,6 +14,8 @@ in Vertex {
 //--------------------------------------------------------------------------//
 uniform vec3 uCameraPos;
 uniform int  uSamples = 10;
+uniform float uRandX[100];
+uniform float uRandY[100];
 
 //--------------------------------------------------------------------------//
 // textures                                                                 //
@@ -39,11 +41,6 @@ out vec3 outColor;
 #include "tonemapping.glsl"
 
 void main(){
-    // ray from the camera to the intersection point
-    vec3 w0 = normalize(i.pos - uCameraPos);
-    vec3 n = normalize(i.normal);
-    vec3 wi = reflect(w0, n);
-
     // grab pbr properties
     PbrMaterial pbr;
     pbr.albedo    = vec3(texture(albedoTexture, i.uv));
@@ -53,39 +50,42 @@ void main(){
     pbr.ao        = texture(aoTexture,          i.uv).x;
     pbr.f0        = mix(vec3(0.04), pbr.albedo, pbr.metallic);
     pbr.a         = pbr.roughness;
-    pbr.a = 0.125;
     pbr.k         = (pbr.a * pbr.a) / 2.0;
 
     // grab all relevant vectors and the roughness
     Microfacet micro;
-    micro.n = n;
-    micro.l = normalize(wi);
-    micro.v = normalize(-w0);
-    micro.h = normalize(micro.l + micro.v);
+    micro.n = normalize(i.normal);
+    micro.v = normalize(uCameraPos - i.pos);
 
-    // fresnel property
-    vec3 f = fresnel_schlick(saturate(dot(micro.l, micro.h)), pbr.f0);
-
-    // grab random variables
+    // setup random variables
     Rand rand;
     rand.r  = texture(noiseTexture, i.uv).x;
     rand.r1 = texture(noiseTexture, i.uv).y;
     rand.r2 = texture(noiseTexture, i.uv).z;
-    rand.ks = saturate(length(f));
-    rand.kd = 0.0;
-    rand.kd = saturate(1.0 - rand.ks);
 
     // calculate for multiple samples
     vec3 color = vec3(0);
     vec2 uv = i.uv;
     for(int s = 0; s < uSamples; s++) {
         // update random values
-        uv += vec2(rand.r2, rand.r1);
-        rand.r1 = texture(noiseTexture, uv).y;
-        rand.r2 = texture(noiseTexture, uv).z;
+        uv += vec2(0.01, 0.01);
+        //uv = vec2(sin(uv.x), cos(uv.y));
+        rand.r1 = uRandX[s];
+        rand.r2 = uRandY[s];
+
+        // get cosine distributed direction
+        micro.l = normalize(random_cosine_dir(micro.n, rand.r1, rand.r2, pbr.a));
+
+        // determine half vector
+        micro.h = normalize(micro.l + micro.v);
+
+        // determine ks and kd
+        vec3 f = fresnel_schlick(saturate(dot(micro.l, micro.h)), pbr.f0);
+        rand.ks = saturate(length(f));
+        rand.kd = saturate(1.0 - rand.ks);
 
         // trace the ray and calculate resulting color
-        color += trace(w0, wi, pbr, micro, rand);
+        color += trace(pbr, micro, rand);
     }
     outColor = color / uSamples;
     outColor = tone_mapping(outColor);

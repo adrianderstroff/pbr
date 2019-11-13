@@ -18,7 +18,7 @@ type Shader struct {
 	renderables   []Renderable
 }
 
-// MakeProgram contrusts a Shader that consists of a vertex and fragment shader.
+// Make contructs a Shader that consists of a vertex and fragment shader.
 func Make(vertexShaderPath, fragmentShaderPath string) (Shader, error) {
 	// loads files
 	vertexShaderSource, err := loadFile(vertexShaderPath)
@@ -67,7 +67,7 @@ func Make(vertexShaderPath, fragmentShaderPath string) (Shader, error) {
 	return shaderProgram, nil
 }
 
-// MakeGeomProgram contrusts a Shader that consists of a vertex, geometry and fragment shader.
+// MakeGeom contrusts a Shader that consists of a vertex, geometry and fragment shader.
 func MakeGeom(vertexShaderPath, geometryShaderPath, fragmentShaderPath string) (Shader, error) {
 	// loads files
 	vertexShaderSource, err := loadFile(vertexShaderPath)
@@ -127,7 +127,7 @@ func MakeGeom(vertexShaderPath, geometryShaderPath, fragmentShaderPath string) (
 	return shaderProgram, nil
 }
 
-// MakeComputeProgram contrusts a Shader that consists of a compute shader.
+// MakeCompute contrusts a Shader that consists of a compute shader.
 func MakeCompute(computeShaderPath string) (Shader, error) {
 	// loads files
 	computeShaderSource, err := loadFile(computeShaderPath)
@@ -174,9 +174,9 @@ func (shader *Shader) AddRenderable(renderable Renderable) {
 }
 
 // RemoveAllRenderables removes all Renderables.
-func (Shader *Shader) RemoveAllRenderables() {
+func (shader *Shader) RemoveAllRenderables() {
 	// TODO: should renderables be deleted?
-	Shader.renderables = nil
+	shader.renderables = nil
 }
 
 // Render draws all Renderables that had been added to this Shader.
@@ -186,7 +186,7 @@ func (shader *Shader) Render() {
 	}
 }
 
-// RenderInstances draws all Renderables each multiple times defined by instancecount.
+// RenderInstanced draws all Renderables each multiple times defined by instancecount.
 func (shader *Shader) RenderInstanced(instancecount int32) {
 	for _, renderable := range shader.renderables {
 		renderable.RenderInstanced(instancecount)
@@ -224,7 +224,15 @@ func (shader *Shader) UpdateInt32(uniformName string, i32 int32) {
 	}
 }
 
-// UpdateInt32 updates the value of an 32bit float in the shader.
+// UpdateInt32Slice updates the value of an 32bit int slice in the shader.
+func (shader *Shader) UpdateInt32Slice(uniformName string, i32 []int32) {
+	location := gl.GetUniformLocation(shader.programHandle, gl.Str(uniformName+"\x00"))
+	if location != -1 {
+		gl.Uniform1iv(location, int32(len(i32)), &i32[0])
+	}
+}
+
+// UpdateFloat32 updates the value of an 32bit float in the shader.
 func (shader *Shader) UpdateFloat32(uniformName string, f32 float32) {
 	location := gl.GetUniformLocation(shader.programHandle, gl.Str(uniformName+"\x00"))
 	if location != -1 {
@@ -232,7 +240,15 @@ func (shader *Shader) UpdateFloat32(uniformName string, f32 float32) {
 	}
 }
 
-// UpdateInt32 updates the value of an vec2 in the shader.
+// UpdateFloat32Slice updates the value of an 32bit float slice in the shader.
+func (shader *Shader) UpdateFloat32Slice(uniformName string, f32 []float32) {
+	location := gl.GetUniformLocation(shader.programHandle, gl.Str(uniformName+"\x00"))
+	if location != -1 {
+		gl.Uniform1fv(location, int32(len(f32)), &f32[0])
+	}
+}
+
+// UpdateVec2 updates the value of an vec2 in the shader.
 func (shader *Shader) UpdateVec2(uniformName string, vec2 mgl32.Vec2) {
 	location := gl.GetUniformLocation(shader.programHandle, gl.Str(uniformName+"\x00"))
 	if location != -1 {
@@ -240,7 +256,7 @@ func (shader *Shader) UpdateVec2(uniformName string, vec2 mgl32.Vec2) {
 	}
 }
 
-// UpdateInt32 updates the value of an vec3 in the shader.
+// UpdateVec3 updates the value of an vec3 in the shader.
 func (shader *Shader) UpdateVec3(uniformName string, vec3 mgl32.Vec3) {
 	location := gl.GetUniformLocation(shader.programHandle, gl.Str(uniformName+"\x00"))
 	if location != -1 {
@@ -248,7 +264,7 @@ func (shader *Shader) UpdateVec3(uniformName string, vec3 mgl32.Vec3) {
 	}
 }
 
-// UpdateInt32 updates the value of an mat4 in the shader.
+// UpdateMat4 updates the value of an mat4 in the shader.
 func (shader *Shader) UpdateMat4(uniformName string, mat mgl32.Mat4) {
 	location := gl.GetUniformLocation(shader.programHandle, gl.Str(uniformName+"\x00"))
 	if location != -1 {
@@ -256,7 +272,7 @@ func (shader *Shader) UpdateMat4(uniformName string, mat mgl32.Mat4) {
 	}
 }
 
-// Returns a handle to the Shader.
+// GetHandle returns a handle to the Shader.
 func (shader *Shader) GetHandle() uint32 {
 	return shader.programHandle
 }

@@ -164,7 +164,9 @@ var (
 	DispatchCompute         = ogl.DispatchCompute
 	GetUniformLocation      = ogl.GetUniformLocation
 	Uniform1i               = ogl.Uniform1i
+	Uniform1iv              = ogl.Uniform1iv
 	Uniform1f               = ogl.Uniform1f
+	Uniform1fv              = ogl.Uniform1fv
 	Uniform2fv              = ogl.Uniform2fv
 	Uniform3fv              = ogl.Uniform3fv
 	UniformMatrix4fv        = ogl.UniformMatrix4fv

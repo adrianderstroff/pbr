@@ -6,7 +6,7 @@ import (
 	"github.com/adrianderstroff/pbr/pkg/core/gl"
 	"github.com/adrianderstroff/pbr/pkg/core/shader"
 	"github.com/adrianderstroff/pbr/pkg/scene/camera"
-	"github.com/adrianderstroff/pbr/pkg/view/mesh/box"
+	"github.com/adrianderstroff/pbr/pkg/view/mesh/sphere"
 	"github.com/adrianderstroff/pbr/pkg/view/texture"
 	"github.com/go-gl/glfw/v3.2/glfw"
 	"github.com/go-gl/mathgl/mgl32"
@@ -29,12 +29,12 @@ type RaymarchingPass struct {
 // MakePbrPass creates a pbr pass
 func MakePbrPass(width, height int, shaderpath, texturepath string, cubemap *texture.Texture) RaymarchingPass {
 	// create shaders
-	box := box.Make(1, 1, 1, false, gl.TRIANGLES)
+	sphere := sphere.Make(10, 10, 1, gl.TRIANGLES)
 	raymarchshader, err := shader.Make(shaderpath+"/pbr/main.vert", shaderpath+"/pbr/main.frag")
 	if err != nil {
 		panic(err)
 	}
-	raymarchshader.AddRenderable(box)
+	raymarchshader.AddRenderable(sphere)
 
 	// load pbr material
 	albedotexture, err := texture.MakeFromPath(texturepath+"/albedo.png", gl.RGBA, gl.RGBA)
@@ -67,6 +67,14 @@ func MakePbrPass(width, height int, shaderpath, texturepath string, cubemap *tex
 		panic(err)
 	}
 	noisetexture.GenMipmap()
+
+	// random value array
+	r1 := MakeNoiseSlice(100)
+	r2 := MakeNoiseSlice(100)
+	raymarchshader.Use()
+	raymarchshader.UpdateFloat32Slice("uRandX", r1)
+	raymarchshader.UpdateFloat32Slice("uRandY", r2)
+	raymarchshader.Release()
 
 	return RaymarchingPass{
 		raymarchshader: raymarchshader,
@@ -127,13 +135,17 @@ func (rmp *RaymarchingPass) OnMouseScroll(x, y float64) bool {
 
 // OnKeyPress is a callback handler that is called every time a keyboard key is pressed.
 func (rmp *RaymarchingPass) OnKeyPress(key, action, mods int) bool {
+	if action == int(glfw.KeyDown) {
+		return false
+	}
+
 	// update global density
 	if key == int(glfw.KeyQ) {
 		rmp.samples--
 		rmp.samples = int32(math.Max(1, float64(rmp.samples)))
 	} else if key == int(glfw.KeyW) {
 		rmp.samples++
-		rmp.samples = int32(math.Min(20, float64(rmp.samples)))
+		rmp.samples = int32(math.Min(100, float64(rmp.samples)))
 	}
 
 	// update uniforms

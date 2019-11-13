@@ -35,3 +35,17 @@ func MakeNoiseTexture(width, height int) (texture.Texture, error) {
 
 	return tex, nil
 }
+
+// MakeNoiseSlice returns an array of random numbers of the defined length.
+func MakeNoiseSlice(len int) []float32 {
+	data := make([]float32, len)
+
+	// random number generator
+	seed := rand.NewSource(time.Now().UnixNano())
+	generator := rand.New(seed)
+	for i := 0; i < len; i++ {
+		data[i] = generator.Float32()
+	}
+
+	return data
+}

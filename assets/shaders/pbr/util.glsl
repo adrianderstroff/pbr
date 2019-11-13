@@ -17,7 +17,7 @@ vec3 saturate(vec3 val) {
 vec3 random_cosine_dir(in vec3 normal, float r1, float r2, float a) {
 	// calculate tangent and binormal
 	vec3 n = normalize(normal);
-	vec3 t = (abs(n.x) > 0.9) ? vec3(0, 1, 0) : vec3(1, 0, 0);
+	vec3 t = (dot(n, vec3(0,1,0)) == 0) ? vec3(1, 0, 0) : vec3(0, 1, 0);
 	vec3 b = cross(t, n);
 	t = cross(n, b);
 
