@@ -12,22 +12,23 @@ import (
 	"github.com/go-gl/mathgl/mgl32"
 )
 
-type RaymarchingPass struct {
+// PbrPass encapsulates all relevant data for rendering a mesh using physically based rendering.
+type PbrPass struct {
 	raymarchshader shader.Shader
 	cubemap        texture.Texture
 	// uniform variables
-	samples int32
+	samples         int32
+	globalroughness float32
 	// pbr textures
 	albedotexture    texture.Texture
 	normaltexture    texture.Texture
 	metallictexture  texture.Texture
 	roughnesstexture texture.Texture
 	aotexture        texture.Texture
-	noisetexture     texture.Texture
 }
 
 // MakePbrPass creates a pbr pass
-func MakePbrPass(width, height int, shaderpath, texturepath string, cubemap *texture.Texture) RaymarchingPass {
+func MakePbrPass(width, height int, shaderpath, texturepath string, cubemap *texture.Texture) PbrPass {
 	// create shaders
 	sphere := sphere.Make(10, 10, 1, gl.TRIANGLES)
 	raymarchshader, err := shader.Make(shaderpath+"/pbr/main.vert", shaderpath+"/pbr/main.frag")
@@ -47,12 +48,12 @@ func MakePbrPass(width, height int, shaderpath, texturepath string, cubemap *tex
 		panic(err)
 	}
 	normaltexture.GenMipmap()
-	metallictexture, err := texture.MakeFromPath(texturepath+"/metallic.png", gl.RGBA, gl.RED)
+	metallictexture, err := texture.MakeFromPathFixedChannels(texturepath+"/metallic.png", 4, gl.RGBA, gl.RGBA)
 	if err != nil {
 		panic(err)
 	}
 	metallictexture.GenMipmap()
-	roughnesstexture, err := texture.MakeFromPath(texturepath+"/roughness.png", gl.RGBA, gl.RED)
+	roughnesstexture, err := texture.MakeFromPathFixedChannels(texturepath+"/roughness.png", 4, gl.RGBA, gl.RGBA)
 	if err != nil {
 		panic(err)
 	}
@@ -62,44 +63,41 @@ func MakePbrPass(width, height int, shaderpath, texturepath string, cubemap *tex
 		panic(err)
 	}
 	aotexture.GenMipmap()
-	noisetexture, err := MakeNoiseTexture(width, height)
-	if err != nil {
-		panic(err)
-	}
-	noisetexture.GenMipmap()
 
 	// random value array
+	r := MakeNoiseSlice(100)
 	r1 := MakeNoiseSlice(100)
 	r2 := MakeNoiseSlice(100)
 	raymarchshader.Use()
+	raymarchshader.UpdateFloat32Slice("uRandR", r)
 	raymarchshader.UpdateFloat32Slice("uRandX", r1)
 	raymarchshader.UpdateFloat32Slice("uRandY", r2)
+	raymarchshader.UpdateFloat32("uGlobalRoughness", 0.1)
 	raymarchshader.Release()
 
-	return RaymarchingPass{
+	return PbrPass{
 		raymarchshader: raymarchshader,
 		cubemap:        *cubemap,
 		// uniform variables
-		samples: 10,
+		samples:         10,
+		globalroughness: 0.1,
 		// pbr textures
 		albedotexture:    albedotexture,
 		normaltexture:    normaltexture,
 		metallictexture:  metallictexture,
 		roughnesstexture: roughnesstexture,
 		aotexture:        aotexture,
-		noisetexture:     noisetexture,
 	}
 }
 
 // Render does the pbr pass
-func (rmp *RaymarchingPass) Render(camera camera.Camera) {
+func (rmp *PbrPass) Render(camera camera.Camera) {
 	rmp.cubemap.Bind(0)
 	rmp.albedotexture.Bind(1)
 	rmp.normaltexture.Bind(2)
 	rmp.metallictexture.Bind(3)
 	rmp.roughnesstexture.Bind(4)
 	rmp.aotexture.Bind(5)
-	rmp.noisetexture.Bind(6)
 
 	rmp.raymarchshader.Use()
 	rmp.raymarchshader.UpdateMat4("V", camera.GetView())
@@ -115,27 +113,26 @@ func (rmp *RaymarchingPass) Render(camera camera.Camera) {
 	rmp.metallictexture.Unbind()
 	rmp.roughnesstexture.Unbind()
 	rmp.aotexture.Unbind()
-	rmp.noisetexture.Unbind()
 }
 
 // OnCursorPosMove is a callback handler that is called every time the cursor moves.
-func (rmp *RaymarchingPass) OnCursorPosMove(x, y, dx, dy float64) bool {
+func (rmp *PbrPass) OnCursorPosMove(x, y, dx, dy float64) bool {
 	return false
 }
 
 // OnMouseButtonPress is a callback handler that is called every time a mouse button is pressed or released.
-func (rmp *RaymarchingPass) OnMouseButtonPress(leftPressed, rightPressed bool) bool {
+func (rmp *PbrPass) OnMouseButtonPress(leftPressed, rightPressed bool) bool {
 	return false
 }
 
 // OnMouseScroll is a callback handler that is called every time the mouse wheel moves.
-func (rmp *RaymarchingPass) OnMouseScroll(x, y float64) bool {
+func (rmp *PbrPass) OnMouseScroll(x, y float64) bool {
 	return false
 }
 
 // OnKeyPress is a callback handler that is called every time a keyboard key is pressed.
-func (rmp *RaymarchingPass) OnKeyPress(key, action, mods int) bool {
-	if action == int(glfw.KeyDown) {
+func (rmp *PbrPass) OnKeyPress(key, action, mods int) bool {
+	if action == int(glfw.Release) {
 		return false
 	}
 
@@ -146,11 +143,18 @@ func (rmp *RaymarchingPass) OnKeyPress(key, action, mods int) bool {
 	} else if key == int(glfw.KeyW) {
 		rmp.samples++
 		rmp.samples = int32(math.Min(100, float64(rmp.samples)))
+	} else if key == int(glfw.KeyE) {
+		rmp.globalroughness += 0.001
+		rmp.globalroughness = float32(math.Min(1.0, float64(rmp.globalroughness)))
+	} else if key == int(glfw.KeyR) {
+		rmp.globalroughness -= 0.001
+		rmp.globalroughness = float32(math.Max(0.0, float64(rmp.globalroughness)))
 	}
 
 	// update uniforms
 	rmp.raymarchshader.Use()
 	rmp.raymarchshader.UpdateInt32("uSamples", rmp.samples)
+	rmp.raymarchshader.UpdateFloat32("uGlobalRoughness", rmp.globalroughness)
 	rmp.raymarchshader.Release()
 
 	return false

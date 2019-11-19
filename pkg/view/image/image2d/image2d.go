@@ -1,4 +1,4 @@
-// Package texture provides classes for creating and storing images.
+// Package image2d provides classes for creating and storing 2d images.
 package image2d
 
 import (
@@ -7,7 +7,7 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
-	_ "image/jpeg"
+	_ "image/jpeg" // used to decode jpeg
 	"image/png"
 	"os"
 	"unsafe"
@@ -61,6 +61,57 @@ func MakeFromData(width, height int, data []uint8) (Image2D, error) {
 	err := checkDimensions(width, height, channels)
 	if err != nil {
 		return Image2D{}, err
+	}
+
+	return Image2D{
+		pixelType: uint32(gl.UNSIGNED_BYTE),
+		width:     width,
+		height:    height,
+		channels:  channels,
+		data:      data,
+	}, nil
+}
+
+// MakeFromPathFixedChannels constructs the image data from the specified path.
+// the second parameter fixes the number of channels of the output image to the specified number.
+// If there is no image at the specified path an error is returned instead.
+func MakeFromPathFixedChannels(path string, channels int) (Image2D, error) {
+	// load image file
+	file, err := os.Open(path)
+	if err != nil {
+		return Image2D{}, err
+	}
+	defer file.Close()
+
+	// decode image
+	img, _, err := image.Decode(file)
+	if err != nil {
+		return Image2D{}, err
+	}
+
+	// get image dimensions
+	rect := img.Bounds()
+	size := rect.Size()
+	width := size.X
+	height := size.Y
+
+	// early return if invalid dimensions had been specified
+	err = checkDimensions(width, height, channels)
+	if err != nil {
+		return Image2D{}, err
+	}
+
+	// exctract data values
+	var data []uint8
+	switch channels {
+	case 1:
+		gray := image.NewGray(rect)
+		draw.Draw(gray, rect, img, image.Pt(0, 0), draw.Src)
+		data = gray.Pix
+	case 4:
+		rgba := image.NewRGBA(rect)
+		draw.Draw(rgba, rect, img, image.Pt(0, 0), draw.Src)
+		data = rgba.Pix
 	}
 
 	return Image2D{

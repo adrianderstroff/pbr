@@ -14,6 +14,8 @@ in Vertex {
 //--------------------------------------------------------------------------//
 uniform vec3 uCameraPos;
 uniform int  uSamples = 10;
+uniform float uGlobalRoughness = 0.1;
+uniform float uRandR[100];
 uniform float uRandX[100];
 uniform float uRandY[100];
 
@@ -26,7 +28,6 @@ layout(binding=2) uniform sampler2D   normalTexture;
 layout(binding=3) uniform sampler2D   metallicTexture;
 layout(binding=4) uniform sampler2D   roughnessTexture;
 layout(binding=5) uniform sampler2D   aoTexture;
-layout(binding=6) uniform sampler2D   noiseTexture;
 
 //--------------------------------------------------------------------------//
 // output color                                                             //
@@ -47,6 +48,7 @@ void main(){
     pbr.normal    = vec3(texture(normalTexture, i.uv));
     pbr.metallic  = texture(metallicTexture,    i.uv).x;
     pbr.roughness = texture(roughnessTexture,   i.uv).x;
+    pbr.roughness = max(pbr.roughness, uGlobalRoughness);
     pbr.ao        = texture(aoTexture,          i.uv).x;
     pbr.f0        = mix(vec3(0.04), pbr.albedo, pbr.metallic);
     pbr.a         = pbr.roughness;
@@ -59,30 +61,32 @@ void main(){
 
     // setup random variables
     Rand rand;
-    rand.r  = texture(noiseTexture, i.uv).x;
-    rand.r1 = texture(noiseTexture, i.uv).y;
-    rand.r2 = texture(noiseTexture, i.uv).z;
+    rand.r  = 0;
+    rand.r1 = 0;
+    rand.r2 = 0;
 
     // calculate for multiple samples
     vec3 color = vec3(0);
-    vec2 uv = i.uv;
     for(int s = 0; s < uSamples; s++) {
         // update random values
-        uv += vec2(0.01, 0.01);
-        //uv = vec2(sin(uv.x), cos(uv.y));
+        rand.r  = uRandR[s];
         rand.r1 = uRandX[s];
         rand.r2 = uRandY[s];
 
-        // get cosine distributed direction
-        micro.l = normalize(random_cosine_dir(micro.n, rand.r1, rand.r2, pbr.a));
+        // determine ks and kd
+        rand.ks = calculateSpecularCoefficient(pbr, micro);
+        rand.kd = saturate(1.0 - rand.ks);
+
+        if(rand.r < rand.ks) {
+            // reflected ray
+            micro.l = reflect(-micro.v, micro.n);
+        } else {
+            // get cosine distributed direction
+            micro.l = normalize(random_cosine_dir(micro.n, rand.r1, rand.r2, pbr.a));
+        }
 
         // determine half vector
         micro.h = normalize(micro.l + micro.v);
-
-        // determine ks and kd
-        vec3 f = fresnel_schlick(saturate(dot(micro.l, micro.h)), pbr.f0);
-        rand.ks = saturate(length(f));
-        rand.kd = saturate(1.0 - rand.ks);
 
         // trace the ray and calculate resulting color
         color += trace(pbr, micro, rand);

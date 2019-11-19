@@ -16,7 +16,7 @@ type CubemapPass struct {
 
 func MakeCubemapPass(shaderpath, cubemappath string) CubemapPass {
 	// create shaders
-	box := box.Make(10, 10, 10, true, gl.TRIANGLES)
+	box := box.Make(50, 50, 50, true, gl.TRIANGLES)
 	cubemapshader, err := shader.Make(shaderpath+"/cubemap/main.vert", shaderpath+"/cubemap/main.frag")
 	if err != nil {
 		panic(err)

@@ -28,6 +28,20 @@ struct Rand {
     float ks;
 };
 
+float calculateSpecularCoefficient(in PbrMaterial pbr, in Microfacet micro) {
+    // reflected ray
+    vec3 l = reflect(-micro.v, micro.n);
+
+    // determine half vector
+    vec3 h = normalize(l + micro.v);
+
+    // calculate fresnel
+    vec3 f = fresnel_schlick(saturate(dot(l, h)), pbr.f0);
+
+    // calculate specular coefficient
+    return saturate(length(f)) * pbr.metallic * pbr.metallic;
+}
+
 vec3 diffuse(in PbrMaterial pbr, in Microfacet micro) {
     float cosine = saturate(dot(micro.n, micro.l));
     float pdf = cosine / PI;
@@ -51,7 +65,6 @@ vec3 specular(in PbrMaterial pbr, in Microfacet micro, in Rand rand) {
     // calculate probability
     //float ggxprob = d * ndoth / max(4 * ldoth, 1e-5);
     //float pdf = ndotl / max(ggxprob * rand.ks, 1e-5);
-
     //return ggx * pdf;
 
     return ggx / max(4 * ndotl * ndotv, 1e-4);
@@ -68,7 +81,4 @@ vec3 trace(in PbrMaterial pbr, in Microfacet micro, in Rand rand) {
 
     // calculate resulting color
     return attenuation * envColor;
-
-    //debug
-    //return 0.5 * (micro.l + 1);
 }

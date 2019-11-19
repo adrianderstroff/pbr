@@ -69,7 +69,7 @@ func MakeDepth(width, height int) Texture {
 	return tex
 }
 
-// MakeCupeMapTexture creates a cube map with the images specfied from the path.
+// MakeCubeMap creates a cube map with the images specfied from the path.
 // For usage with skyboxes where textures are on the inside of the cube, set the
 // inside parameter to true to flip all textures horizontally, otherwise set this
 // parameter to false.
@@ -107,6 +107,19 @@ func MakeCubeMap(right, left, top, bottom, front, back string, inside bool) (Tex
 	tex.Unbind()
 
 	return tex, nil
+}
+
+// MakeFromPathFixedChannels creates a texture with the image data specifed in path.
+func MakeFromPathFixedChannels(path string, channels int, internalformat int32, format uint32) (Texture, error) {
+	image, err := image2d.MakeFromPathFixedChannels(path, channels)
+	if err != nil {
+		return Texture{}, err
+	}
+
+	image.FlipY()
+
+	return Make(image.GetWidth(), image.GetHeight(), internalformat, format,
+		image.GetPixelType(), image.GetDataPointer(), gl.NEAREST, gl.NEAREST, gl.CLAMP_TO_EDGE, gl.CLAMP_TO_EDGE), nil
 }
 
 // MakeFromPath creates a texture with the image data specifed in path.

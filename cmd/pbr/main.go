@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"runtime"
 	"strconv"
 
@@ -12,8 +13,8 @@ import (
 
 const (
 	SHADER_PATH  = "./assets/shaders/"
-	TEX_PATH     = "./assets/images/textures/"
-	CUBEMAP_PATH = "./assets/images/cubemap/"
+	TEX_PATH     = "./assets/images/textures/material1/"
+	CUBEMAP_PATH = "./assets/images/cubemap/water/"
 	OUT_PATH     = "./"
 
 	WIDTH  int = 800
@@ -27,7 +28,7 @@ func main() {
 	// setup window
 	title := "PBR"
 	window, _ := window.New(title, int(WIDTH), int(HEIGHT))
-	window.LockFPS(120)
+	window.LockFPS(60)
 	interaction := interaction.New(window)
 	defer window.Close()
 
@@ -45,7 +46,9 @@ func main() {
 	// render loop
 	renderloop := func() {
 		// update title
-		window.SetTitle(title + " " + window.GetFPSFormatted() + " " + strconv.Itoa(int(pbrpass.samples)))
+		samplecount := strconv.Itoa(int(pbrpass.samples))
+		roughness := fmt.Sprintf("%f", pbrpass.globalroughness)
+		window.SetTitle(title + " " + window.GetFPSFormatted() + " " + samplecount + " " + roughness)
 
 		// update camera
 		camera.Update()

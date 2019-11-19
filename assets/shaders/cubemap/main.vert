@@ -8,7 +8,7 @@ out Vertex {
     vec3 uvw;
 } o;
 
-void main(){
+void main() {
     gl_Position = P * V * M * vec4(pos, 1.0);
     o.uvw = pos;
 }
