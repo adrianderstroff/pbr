@@ -172,6 +172,7 @@ var (
 	UniformMatrix4fv        = ogl.UniformMatrix4fv
 	GetShaderiv             = ogl.GetShaderiv
 	ReadPixels              = ogl.ReadPixels
+	PolygonMode             = ogl.PolygonMode
 )
 
 // Errors
@@ -420,6 +421,7 @@ const (
 	POINTS                           = ogl.POINTS
 	LINE_STRIP                       = ogl.LINE_STRIP
 	LINE_LOOP                        = ogl.LINE_LOOP
+	LINE                             = ogl.LINE
 	LINES                            = ogl.LINES
 	LINE_STRIP_ADJACENCY             = ogl.LINE_STRIP_ADJACENCY
 	LINES_ADJACENCY                  = ogl.LINES_ADJACENCY
@@ -429,4 +431,5 @@ const (
 	TRIANGLE_STRIP_ADJACENCY         = ogl.TRIANGLE_STRIP_ADJACENCY
 	TRIANGLES_ADJACENCY              = ogl.TRIANGLES_ADJACENCY
 	PATCHES                          = ogl.PATCHES
+	FILL                             = ogl.FILL
 )

@@ -19,6 +19,7 @@ type PbrPass struct {
 	// uniform variables
 	samples         int32
 	globalroughness float32
+	wireframe       bool
 	// pbr textures
 	albedotexture    texture.Texture
 	normaltexture    texture.Texture
@@ -30,7 +31,7 @@ type PbrPass struct {
 // MakePbrPass creates a pbr pass
 func MakePbrPass(width, height int, shaderpath, texturepath string, cubemap *texture.Texture) PbrPass {
 	// create shaders
-	sphere := sphere.Make(10, 10, 1, gl.TRIANGLES)
+	sphere := sphere.Make(20, 25, 1, gl.TRIANGLES)
 	raymarchshader, err := shader.Make(shaderpath+"/pbr/main.vert", shaderpath+"/pbr/main.frag")
 	if err != nil {
 		panic(err)
@@ -81,6 +82,7 @@ func MakePbrPass(width, height int, shaderpath, texturepath string, cubemap *tex
 		// uniform variables
 		samples:         10,
 		globalroughness: 0.1,
+		wireframe:       false,
 		// pbr textures
 		albedotexture:    albedotexture,
 		normaltexture:    normaltexture,
@@ -92,6 +94,12 @@ func MakePbrPass(width, height int, shaderpath, texturepath string, cubemap *tex
 
 // Render does the pbr pass
 func (rmp *PbrPass) Render(camera camera.Camera) {
+	if rmp.wireframe {
+		gl.PolygonMode(gl.FRONT_AND_BACK, gl.LINE)
+	} else {
+		gl.PolygonMode(gl.FRONT_AND_BACK, gl.FILL)
+	}
+
 	rmp.cubemap.Bind(0)
 	rmp.albedotexture.Bind(1)
 	rmp.normaltexture.Bind(2)
@@ -113,6 +121,8 @@ func (rmp *PbrPass) Render(camera camera.Camera) {
 	rmp.metallictexture.Unbind()
 	rmp.roughnesstexture.Unbind()
 	rmp.aotexture.Unbind()
+
+	gl.PolygonMode(gl.FRONT_AND_BACK, gl.FILL)
 }
 
 // OnCursorPosMove is a callback handler that is called every time the cursor moves.
@@ -149,6 +159,8 @@ func (rmp *PbrPass) OnKeyPress(key, action, mods int) bool {
 	} else if key == int(glfw.KeyR) {
 		rmp.globalroughness -= 0.001
 		rmp.globalroughness = float32(math.Max(0.0, float64(rmp.globalroughness)))
+	} else if key == int(glfw.KeyT) {
+		rmp.wireframe = !rmp.wireframe
 	}
 
 	// update uniforms

@@ -40,6 +40,7 @@ out vec3 outColor;
 #include "util.glsl"
 #include "pbr.glsl"
 #include "tonemapping.glsl"
+#include "normal.glsl"
 
 void main(){
     // grab pbr properties
@@ -56,7 +57,7 @@ void main(){
 
     // grab all relevant vectors and the roughness
     Microfacet micro;
-    micro.n = normalize(i.normal);
+    micro.n = normal_mapping(i.normal, pbr.normal);
     micro.v = normalize(uCameraPos - i.pos);
 
     // setup random variables
@@ -77,20 +78,9 @@ void main(){
         rand.ks = calculateSpecularCoefficient(pbr, micro);
         rand.kd = saturate(1.0 - rand.ks);
 
-        if(rand.r < rand.ks) {
-            // reflected ray
-            micro.l = reflect(-micro.v, micro.n);
-        } else {
-            // get cosine distributed direction
-            micro.l = normalize(random_cosine_dir(micro.n, rand.r1, rand.r2, pbr.a));
-        }
-
-        // determine half vector
-        micro.h = normalize(micro.l + micro.v);
-
         // trace the ray and calculate resulting color
         color += trace(pbr, micro, rand);
     }
     outColor = color / uSamples;
-    outColor = tone_mapping(outColor);
+    //outColor = tone_mapping(outColor);
 }

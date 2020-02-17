@@ -1,9 +1,7 @@
 package main
 
 import (
-	"fmt"
 	"runtime"
-	"strconv"
 
 	"github.com/adrianderstroff/pbr/pkg/core/interaction"
 	"github.com/adrianderstroff/pbr/pkg/core/window"
@@ -36,23 +34,19 @@ func main() {
 	interaction.AddInteractable(&camera)
 
 	// make passes
-	cubemappass := MakeCubemapPass(SHADER_PATH, CUBEMAP_PATH)
-	pbrpass := MakePbrPass(WIDTH, HEIGHT, SHADER_PATH, TEX_PATH, &cubemappass.cubemap)
-	interaction.AddInteractable(&pbrpass)
+	texmappass := MakeTexMapPass(WIDTH, HEIGHT, SHADER_PATH, TEX_PATH)
+	interaction.AddInteractable(&texmappass)
 
 	// render loop
 	renderloop := func() {
 		// update title
-		samplecount := strconv.Itoa(int(pbrpass.samples))
-		roughness := fmt.Sprintf("%f", pbrpass.globalroughness)
-		window.SetTitle(title + " " + window.GetFPSFormatted() + " " + samplecount + " " + roughness)
+		window.SetTitle(title + " " + window.GetFPSFormatted())
 
 		// update camera
 		camera.Update()
 
 		// execute render passes
-		cubemappass.Render(&camera)
-		pbrpass.Render(&camera)
+		texmappass.Render(&camera)
 	}
 	window.RunMainLoop(renderloop)
 }

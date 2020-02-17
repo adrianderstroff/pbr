@@ -46,14 +46,9 @@ func Make(hres, vres int, radius float32) geometry.Geometry {
 			py := radius * cgm.Cos32(phi)
 			pz := radius * (-cgm.Sin32(theta)) * cgm.Sin32(phi)
 
-			// uv coordinates
-			//n := mgl32.Vec3{px, py, pz}.Normalize()
-			//s := 0.5 + float32(math.Atan2(float64(n.X()), float64(n.Z())))/(2*math.Pi)
-			//t := 0.5 - float32(math.Asin(float64(n.Y())))/math.Pi
-
 			// add to arrays
 			rings[y] = append(rings[y], mgl32.Vec3{px, py, pz})
-			tempuvs[y] = append(tempuvs[y], mgl32.Vec2{u, v})
+			tempuvs[y] = append(tempuvs[y], mgl32.Vec2{u, 1 - v})
 		}
 	}
 

@@ -42,14 +42,27 @@ float calculateSpecularCoefficient(in PbrMaterial pbr, in Microfacet micro) {
     return saturate(length(f)) * pbr.metallic * pbr.metallic;
 }
 
-vec3 diffuse(in PbrMaterial pbr, in Microfacet micro) {
+vec3 diffuse(in PbrMaterial pbr, in Microfacet micro, in Rand rand) {
+    // get cosine distributed direction
+    micro.l = normalize(random_cosine_dir(micro.n, rand.r1, rand.r2, pbr.a));
+
+    // get pdf
     float cosine = saturate(dot(micro.n, micro.l));
     float pdf = cosine / PI;
 
-    return pbr.albedo * pdf;
+    // determine indirect illumination
+    vec3 envColor = indirect_light(micro.l, i.pos);
+
+    return pbr.albedo * pdf * envColor;
 }
 
 vec3 specular(in PbrMaterial pbr, in Microfacet micro, in Rand rand) {
+    // reflected ray
+    micro.l = reflect(-micro.v, micro.n);
+
+    // determine half vector
+    micro.h = normalize(micro.l + micro.v);
+
     // compute dot products
     float ndotl = saturate(dot(micro.n, micro.l));
     float ndoth = saturate(dot(micro.n, micro.h));
@@ -67,18 +80,21 @@ vec3 specular(in PbrMaterial pbr, in Microfacet micro, in Rand rand) {
     //float pdf = ndotl / max(ggxprob * rand.ks, 1e-5);
     //return ggx * pdf;
 
-    return ggx / max(4 * ndotl * ndotv, 1e-4);
-}
-
-vec3 trace(in PbrMaterial pbr, in Microfacet micro, in Rand rand) {
-    vec3 attenuation = rand.kd * diffuse(pbr, micro) + specular(pbr, micro, rand);
-
-    // add ambient occlusion
-    attenuation *= pbr.ao;
+    // normalize to get brdf
+    vec3 cookTorrance = ggx / max(4 * ndotl * ndotv, 1e-6);
 
     // determine indirect illumination
     vec3 envColor = indirect_light(micro.l, i.pos);
 
-    // calculate resulting color
-    return attenuation * envColor;
+    return cookTorrance * envColor;
+}
+
+vec3 trace(in PbrMaterial pbr, in Microfacet micro, in Rand rand) {
+    // brdf
+    vec3 attenuation = rand.kd * diffuse(pbr, micro, rand) + specular(pbr, micro, rand);
+
+    // add ambient occlusion
+    attenuation *= pbr.ao;
+
+    return attenuation;
 }

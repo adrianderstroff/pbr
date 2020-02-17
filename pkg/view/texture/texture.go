@@ -267,6 +267,7 @@ func (tex *Texture) Delete() {
 func (tex *Texture) GenMipmap() {
 	tex.Bind(0)
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR)
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR_MIPMAP_LINEAR)
 	gl.GenerateMipmap(tex.target)
 	tex.Unbind()
 }
