@@ -1,6 +1,4 @@
-// Package geometry provides geometric primitives that can be used in meshes.
-// It also offers a way to create custom geometric shapes.
-package geometry
+package mesh
 
 // Alignment options for different vertex attribute layouts
 const (
@@ -25,8 +23,8 @@ type Geometry struct {
 	Alignment int
 }
 
-// Make constructs a Geometry with it's layout and the data.
-func Make(layout []VertexAttribute, data [][]float32) Geometry {
+// MakeGeometry constructs a Geometry with it's layout and the data.
+func MakeGeometry(layout []VertexAttribute, data [][]float32) Geometry {
 	// determine alignment
 	alignment := ALIGN_MULTI_BATCH
 	if len(data) == 1 {
@@ -40,9 +38,9 @@ func Make(layout []VertexAttribute, data [][]float32) Geometry {
 	}
 }
 
-// New constructs a reference to Geometry with it's layout and the data.
-func New(layout []VertexAttribute, data [][]float32) *Geometry {
-	geometry := Make(layout, data)
+// NewGeometry constructs a reference to Geometry with it's layout and the data.
+func NewGeometry(layout []VertexAttribute, data [][]float32) *Geometry {
+	geometry := MakeGeometry(layout, data)
 	return &geometry
 }
 
@@ -55,17 +53,17 @@ func New(layout []VertexAttribute, data [][]float32) *Geometry {
 // gl.STATIC_DRAW, gl.STATIC_READ, gl.STATIC_COPY, gl.DYNAMIC_DRAW,
 // gl.DYNAMIC_READ, or gl.DYNAMIC_COPY.
 type VertexAttribute struct {
-	Id     string
+	ID     string
 	GlType uint32
 	Count  int32
 	Usage  int32
 }
 
-// VertexAttribute constructs a VertexAttribute with the given id, the type of one element, the number
+// MakeVertexAttribute constructs a VertexAttribute with the given id, the type of one element, the number
 // of elements and the OpenGL usage option.
 func MakeVertexAttribute(id string, glType uint32, count int32, usage int32) VertexAttribute {
 	return VertexAttribute{
-		Id:     id,
+		ID:     id,
 		GlType: glType,
 		Count:  count,
 		Usage:  usage,

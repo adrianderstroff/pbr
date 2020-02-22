@@ -37,7 +37,7 @@ func Make3D(width, height, depth, internalformat int32, format, pixelType uint32
 	return texture
 }
 
-// Make3DFromPaths creates a 3D texture with the data of the images specifed by the provided paths.
+// Make3DFromPath creates a 3D texture with the data of the images specifed by the provided paths.
 func Make3DFromPath(paths []string, internalformat int32, format uint32) (Texture, error) {
 	// load images from the specified paths and accumulate the loaded data
 	images := []image2d.Image2D{}

@@ -5,40 +5,39 @@ package mesh
 import (
 	vao "github.com/adrianderstroff/pbr/pkg/buffer/vao"
 	vbo "github.com/adrianderstroff/pbr/pkg/buffer/vbo"
-	geom "github.com/adrianderstroff/pbr/pkg/view/geometry"
 	tex "github.com/adrianderstroff/pbr/pkg/view/texture"
 )
 
 // Mesh holds geometry data and textures that should be used to render this object.
 // It uses the geometry to construct the vertex array object.
 type Mesh struct {
-	geometry     geom.Geometry
+	geometry     Geometry
 	textures     []tex.Texture
 	vao          vao.VAO
 	onPreRender  func()
 	onPostRender func()
 }
 
-// MakeMesh constructs a Mesh from it's geometry and a set of textures.
+// Make constructs a Mesh from it's geometry and a set of textures.
 // By passing no textures only the geometry will be used to render this mesh.
-func Make(geometry geom.Geometry, textures []tex.Texture, mode uint32) Mesh {
+func Make(geometry Geometry, textures []tex.Texture, mode uint32) Mesh {
 	// make vao
 	vao := vao.Make(mode)
 
 	// populate vao depending on the alignment of the geometry
 	switch geometry.Alignment {
-	case geom.ALIGN_MULTI_BATCH:
+	case ALIGN_MULTI_BATCH:
 		// add multiple vbos specified by the geometries layout to the vao
 		for i := 0; i < len(geometry.Layout); i++ {
 			data := geometry.Data[i]
 			attrib := geometry.Layout[i]
 			vbo := vbo.Make(data, uint32(attrib.Count), uint32(attrib.Usage))
-			vbo.AddVertexAttribute(attrib.Id, attrib.Count, attrib.GlType)
+			vbo.AddVertexAttribute(attrib.ID, attrib.Count, attrib.GlType)
 			vao.AddVertexBuffer(&vbo)
 		}
-	case geom.ALIGN_SINGLE_BATCH:
+	case ALIGN_SINGLE_BATCH:
 		// just for future compatibility
-	case geom.ALIGN_INTERLEAVED:
+	case ALIGN_INTERLEAVED:
 		// count number of all elements of all vertex attributes
 		var count int32 = 0
 		for _, attrib := range geometry.Layout {
@@ -48,7 +47,7 @@ func Make(geometry geom.Geometry, textures []tex.Texture, mode uint32) Mesh {
 		// add all vertex attributes to one vbo
 		vbo := vbo.Make(geometry.Data[0], uint32(count), uint32(geometry.Layout[0].Usage))
 		for _, attrib := range geometry.Layout {
-			vbo.AddVertexAttribute(attrib.Id, attrib.Count, attrib.GlType)
+			vbo.AddVertexAttribute(attrib.ID, attrib.Count, attrib.GlType)
 		}
 		vao.AddVertexBuffer(&vbo)
 	}
