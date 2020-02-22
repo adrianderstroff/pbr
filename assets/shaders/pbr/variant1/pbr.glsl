@@ -1,6 +1,6 @@
-#include "constants.glsl"
-#include "brdf.glsl"
-#include "environment.glsl"
+#include "../shared/constants.glsl"
+#include "../shared/brdf.glsl"
+#include "../shared/environment.glsl"
 
 struct PbrMaterial {
     vec3  albedo;

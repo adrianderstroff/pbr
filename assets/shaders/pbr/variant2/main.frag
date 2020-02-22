@@ -37,10 +37,10 @@ out vec3 outColor;
 //--------------------------------------------------------------------------//
 // includes                                                                 //
 //--------------------------------------------------------------------------//
-#include "util.glsl"
+#include "../shared/util.glsl"
+#include "../shared/tonemapping.glsl"
+#include "../shared/normal.glsl"
 #include "pbr.glsl"
-#include "tonemapping.glsl"
-#include "normal.glsl"
 
 void main(){
     // grab pbr properties
@@ -74,6 +74,9 @@ void main(){
         rand.r1 = uRandX[s];
         rand.r2 = uRandY[s];
 
+        // samples the reflected ray using a cosine distribution.
+        micro.l = normalize(random_cosine_dir(micro.n, rand.r1, rand.r2, pbr.a));
+
         // determine ks and kd
         rand.ks = calculateSpecularCoefficient(pbr, micro);
         rand.kd = saturate(1.0 - rand.ks);
@@ -82,5 +85,5 @@ void main(){
         color += trace(pbr, micro, rand);
     }
     outColor = color / uSamples;
-    //outColor = tone_mapping(outColor);
+    outColor = tone_mapping(outColor);
 }

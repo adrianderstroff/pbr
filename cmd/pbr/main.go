@@ -12,7 +12,7 @@ import (
 
 const (
 	SHADER_PATH  = "./assets/shaders/"
-	TEX_PATH     = "./assets/images/textures/material3/"
+	TEX_PATH     = "./assets/images/textures/material2/"
 	CUBEMAP_PATH = "./assets/images/cubemap/water/"
 	OUT_PATH     = "./"
 

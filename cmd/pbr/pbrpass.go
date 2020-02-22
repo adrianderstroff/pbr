@@ -32,7 +32,7 @@ type PbrPass struct {
 func MakePbrPass(width, height int, shaderpath, texturepath string, cubemap *texture.Texture) PbrPass {
 	// create shaders
 	sphere := sphere.Make(20, 25, 1, gl.TRIANGLES)
-	raymarchshader, err := shader.Make(shaderpath+"/pbr/main.vert", shaderpath+"/pbr/main.frag")
+	raymarchshader, err := shader.Make(shaderpath+"/pbr/variant3/main.vert", shaderpath+"/pbr/variant3/main.frag")
 	if err != nil {
 		panic(err)
 	}

@@ -7,6 +7,9 @@ float saturate(float val) {
     return max(0, min(1, val));
 }
 
+/**
+ * util function to clamp a vector componentwise between 0 and 1
+ */
 vec3 saturate(vec3 val) {
     return max(vec3(0), min(vec3(1), val));
 }
@@ -31,17 +34,9 @@ vec3 random_cosine_dir(in vec3 normal, float r1, float r2, float a) {
 	return normalize(dir);
 }
 
-vec3 determine_direction(vec3 dir, vec3 center, vec3 intersection) {
-	vec3 off = intersection - center;
-	vec3 ndir = normalize(dir);
-
-	float proj = dot(off, ndir);
-	vec3 new_intersection = intersection + ndir - ndir*proj;
-
-	return normalize(new_intersection - center);
-}
-
-// calculates the intersection between a ray and an axis aligned box
+/**
+ * calculates the intersection between a ray and an axis aligned box
+ */
 vec3 ray_box_intersection(const vec3 boxMin, const vec3 boxMax, const vec3 o, const vec3 dir) {
 	vec3 d = (-1) * dir;
 	
