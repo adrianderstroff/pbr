@@ -2,6 +2,7 @@
 package sphere
 
 import (
+	"fmt"
 	"math"
 
 	"github.com/adrianderstroff/pbr/pkg/cgm"
@@ -20,12 +21,19 @@ func Make(hres, vres int, radius float32, mode uint32) mesh.Mesh {
 	return mesh
 }
 
+func calcUVCoordinates(pos mgl32.Vec3) (float32, float32) {
+	dir := pos.Normalize()
+	u := 0.5 + cgm.Atan232(dir.Z(), -dir.X())/(2*math.Pi)
+	v := 0.5 + cgm.Asin32(dir.Y())/math.Pi
+	return u, v
+}
+
 // Make creates a Sphere with the specified horizontal and vertical resolution and a radius.
 // The resolutions have to be 1 or greater
 func makeSphereGeometry(hres, vres int, radius float32) mesh.Geometry {
 	// enforce boundary conditions
-	hres = int(math.Max(float64(hres), 1))
-	vres = int(math.Max(float64(vres), 1))
+	hres = cgm.Maxi(hres, 1)
+	vres = cgm.Maxi(vres, 1)
 
 	// half side lengths
 	w := 2*hres + 1
@@ -43,22 +51,55 @@ func makeSphereGeometry(hres, vres int, radius float32) mesh.Geometry {
 		tempuvs = append(tempuvs, make([]mgl32.Vec2, w))
 
 		for x := 0; x <= w; x++ {
-			// uv coordinates
-			u := float32(x) / float32(w)
-			v := 1.0 - float32(y)/float32(h-1)
-
 			// spherical coordinates
-			theta := 2 * math.Pi * u
-			phi := math.Pi * v
+			fx := float32(x) / float32(w)
+			fy := 1.0 - float32(y)/float32(h-1)
+			theta := 2 * math.Pi * fx
+			phi := math.Pi * fy
 
 			// spherical to cartesian
 			px := radius * cgm.Cos32(theta) * cgm.Sin32(phi)
 			py := radius * cgm.Cos32(phi)
 			pz := radius * (-cgm.Sin32(theta)) * cgm.Sin32(phi)
 
+			pos := mgl32.Vec3{px, py, pz}
+			if fy == 0 {
+				theta := 2 * math.Pi * fx
+				phi := math.Pi * (fy + 0.001)
+
+				// spherical to cartesian
+				px := radius * cgm.Cos32(theta) * cgm.Sin32(phi)
+				py := radius * cgm.Cos32(phi)
+				pz := radius * (-cgm.Sin32(theta)) * cgm.Sin32(phi)
+
+				// new slightly offset position
+				pos = mgl32.Vec3{px, py, pz}
+			} else if fy == 1 {
+				theta := 2 * math.Pi * fx
+				phi := math.Pi * (fy - 0.001)
+
+				// spherical to cartesian
+				px := radius * cgm.Cos32(theta) * cgm.Sin32(phi)
+				py := radius * cgm.Cos32(phi)
+				pz := radius * (-cgm.Sin32(theta)) * cgm.Sin32(phi)
+
+				// new slightly offset position
+				pos = mgl32.Vec3{px, py, pz}
+			}
+
+			// uv coordinates
+			u, v := calcUVCoordinates(pos)
+			// special case since since 360 will be mapped to 0 degree. this
+			// would cause a visible seam because of backwards interpolation
+			// thus we wanna explicitly set u to 1 to avoid this nasty error
+			if x == w {
+				u = 1
+			}
+			fmt.Println(fmt.Sprintf("%d: %f,%f", x, u, v))
+
 			// add to arrays
 			rings[y] = append(rings[y], mgl32.Vec3{px, py, pz})
-			tempuvs[y] = append(tempuvs[y], mgl32.Vec2{u, 1 - v})
+			tempuvs[y] = append(tempuvs[y], mgl32.Vec2{u, v})
 		}
 	}
 

@@ -4,19 +4,21 @@ import (
 	"github.com/adrianderstroff/pbr/pkg/core/gl"
 	"github.com/adrianderstroff/pbr/pkg/core/shader"
 	"github.com/adrianderstroff/pbr/pkg/scene/camera"
-	"github.com/adrianderstroff/pbr/pkg/view/mesh/box"
+	"github.com/adrianderstroff/pbr/pkg/view/mesh/cube"
 	"github.com/adrianderstroff/pbr/pkg/view/texture"
 	"github.com/go-gl/mathgl/mgl32"
 )
 
+// CubemapPass contains all resources used for this shader pass
 type CubemapPass struct {
 	cubemapshader shader.Shader
 	cubemap       texture.Texture
 }
 
+// MakeCubemapPass creates the cubemap pass with the specified paths
 func MakeCubemapPass(shaderpath, cubemappath string) CubemapPass {
 	// create shaders
-	box := box.Make(50, 50, 50, true, gl.TRIANGLES)
+	box := cube.Make(50, 50, 50, true, gl.TRIANGLES)
 	cubemapshader, err := shader.Make(shaderpath+"/cubemap/main.vert", shaderpath+"/cubemap/main.frag")
 	if err != nil {
 		panic(err)
@@ -43,6 +45,7 @@ func MakeCubemapPass(shaderpath, cubemappath string) CubemapPass {
 	}
 }
 
+// Render executes the draw command
 func (cmp *CubemapPass) Render(camera camera.Camera) {
 	cmp.cubemapshader.Use()
 	cmp.cubemap.Bind(0)

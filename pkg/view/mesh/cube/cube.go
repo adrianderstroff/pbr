@@ -1,5 +1,5 @@
 // Package box is used for creating a simple box mesh.
-package box
+package cube
 
 import (
 	"github.com/adrianderstroff/pbr/pkg/core/gl"
@@ -16,8 +16,8 @@ func Make(width, height, depth float32, inside bool, mode uint32) mesh.Mesh {
 	return mesh
 }
 
-// MakeQuad creates a Quad with the specified width, height and depth.
-// If the normals should be inside the quad the inside parameter should be true.
+// makeCubeGeometry creates a cube with the specified width, height and depth.
+// If the normals should be inside the cube the inside parameter should be true.
 func makeCubeGeometry(width, height, depth float32, inside bool) mesh.Geometry {
 	// half side lengths
 	halfWidth := width / 2.0

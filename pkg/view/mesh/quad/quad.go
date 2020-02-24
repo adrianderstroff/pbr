@@ -1,5 +1,5 @@
-// Package plane is used for creating a simple plane mesh.
-package plane
+// Package quad is used for creating a simple quad mesh.
+package quad
 
 import (
 	"github.com/adrianderstroff/pbr/pkg/core/gl"
@@ -9,14 +9,14 @@ import (
 // Make constructs a plane with the specified dimensions. The plane is on the
 // x-y axis and the normal points up the y-axis.
 func Make(width, height float32, mode uint32) mesh.Mesh {
-	geometry := makePlaneGeometry(width, height)
+	geometry := makeQuadGeometry(width, height)
 	mesh := mesh.Make(geometry, nil, mode)
 	return mesh
 }
 
 // Make creates a Quad with the specified width and height on the x-y plane
 // with the normal pointing up the y-axis
-func makePlaneGeometry(width, height float32) mesh.Geometry {
+func makeQuadGeometry(width, height float32) mesh.Geometry {
 	// half side lengths
 	halfWidth := width / 2.0
 	halfHeight := height / 2.0

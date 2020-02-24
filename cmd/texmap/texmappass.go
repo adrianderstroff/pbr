@@ -34,6 +34,7 @@ func MakeTexMapPass(width, height int, shaderpath, texturepath string) TexMapPas
 	if err != nil {
 		panic(err)
 	}
+	albedotexture.SetWrap2D(gl.REPEAT, gl.REPEAT)
 	albedotexture.GenMipmap()
 
 	return TexMapPass{

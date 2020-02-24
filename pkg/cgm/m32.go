@@ -41,3 +41,13 @@ func Sin32(a float32) float32 {
 func Cos32(a float32) float32 {
 	return float32(math.Cos(float64(a)))
 }
+
+// Asin32 is a float32 variant of math.Asin which is float64
+func Asin32(a float32) float32 {
+	return float32(math.Asin(float64(a)))
+}
+
+// Atan232 is a float32 variant of math.Atan2 which is float64
+func Atan232(a, b float32) float32 {
+	return float32(math.Atan2(float64(a), float64(b)))
+}

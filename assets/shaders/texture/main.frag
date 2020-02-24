@@ -20,5 +20,5 @@ layout(binding=0) uniform sampler2D albedoTexture;
 out vec3 outColor;
 
 void main() {
-    outColor = texture(albedoTexture, i.uv).rgb * i.uv.x;
+    outColor = texture(albedoTexture, i.uv).rgb;
 }

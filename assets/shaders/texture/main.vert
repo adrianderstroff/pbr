@@ -1,8 +1,8 @@
 #version 410 core
 
 layout(location = 0) in vec3 pos;
-layout(location = 2) in vec3 normal;
 layout(location = 1) in vec2 uv;
+layout(location = 2) in vec3 normal;
 
 uniform mat4 M, V, P;
 
@@ -28,5 +28,5 @@ void main(){
     o.uv     = uv;
 
     // calculate uv coordinates
-    o.uv = spherical(pos);
+    //o.uv = spherical(pos);
 }
