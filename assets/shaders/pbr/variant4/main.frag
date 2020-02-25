@@ -90,14 +90,15 @@ void main(){
             // samples the reflected ray using a cosine distribution.
             //micro.l = normalize(random_cosine_dir(micro.n, rand.r1, rand.r2, pbr.a));
             //float roughness = pbr.a;
-            float roughness = pbr.a;
-            micro.l = random_cosine_dir(micro.n, rand.r1, rand.r2, roughness);
+            float roughness = 1;
+            micro.l = random_cosine_dir2(micro.n, rand.r1, rand.r2, roughness);
             attenuation = rand.kd * diffuse(pbr, micro, rand);
             //attenuation = vec3(0, 0, 1);
         }
 
         // determine color of indirect light
         vec3 envColor = indirect_light(micro.l, i.pos);
+        //envColor = vec3(1,1,1);
 
         // calculate resulting color
         color += attenuation * envColor * pbr.ao;

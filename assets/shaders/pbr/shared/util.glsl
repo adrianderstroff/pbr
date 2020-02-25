@@ -36,6 +36,7 @@ vec3 random_cosine_dir(in vec3 normal, float r1, float r2, float a) {
 
 /**
  * returns a random normal following a cosine distribution
+ * https://www.particleincell.com/2015/cosine-distribution/
  */
 vec3 random_cosine_dir2(in vec3 normal, float r1, float r2, float a) {
 	// calculate tangent and binormal
