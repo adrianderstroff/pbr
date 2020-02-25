@@ -22,7 +22,7 @@ type Window struct {
 	loopCursor bool
 }
 
-// NewWindow returns a pointer to a Window with the specified window title and window width and height.
+// New returns a pointer to a Window with the specified window title and window width and height.
 func New(title string, width, height int) (*Window, error) {
 	// init glfw
 	if err := glfw.Init(); err != nil {
@@ -115,4 +115,31 @@ func (window *Window) SetTitle(title string) {
 // SetClearColor updates the color used for a new frame and when clearing a FBO.
 func (window *Window) SetClearColor(r, g, b float32) {
 	gl.ClearColor(r, g, b, 1.0)
+}
+
+// OnCursorPosMove is a callback handler that is called every time the cursor moves.
+func (window *Window) OnCursorPosMove(x, y, dx, dy float64) bool {
+	return false
+}
+
+// OnMouseButtonPress is a callback handler that is called every time a mouse button is pressed or released.
+func (window *Window) OnMouseButtonPress(leftPressed, rightPressed bool) bool {
+	return false
+}
+
+// OnMouseScroll is a callback handler that is called every time the mouse wheel moves.
+func (window *Window) OnMouseScroll(x, y float64) bool {
+	return false
+}
+
+// OnKeyPress is a callback handler that is called every time a keyboard key is pressed.
+func (window *Window) OnKeyPress(key, action, mods int) bool {
+	return false
+}
+
+// OnResize is a callback handler that is called every time the window is resized.
+func (window *Window) OnResize(width, height int) bool {
+	window.Width, window.Height = width, height
+	gl.Viewport(0, 0, int32(width), int32(height))
+	return false
 }

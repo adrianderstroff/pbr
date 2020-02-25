@@ -32,19 +32,19 @@ type PbrPass struct {
 func MakePbrPass(width, height int, shaderpath, texturepath string, cubemap *texture.Texture) PbrPass {
 	// create shaders
 	sphere := sphere.Make(20, 25, 1, gl.TRIANGLES)
-	raymarchshader, err := shader.Make(shaderpath+"/pbr/variant3/main.vert", shaderpath+"/pbr/variant3/main.frag")
+	raymarchshader, err := shader.Make(shaderpath+"/pbr/variant4/main.vert", shaderpath+"/pbr/variant4/main.frag")
 	if err != nil {
 		panic(err)
 	}
 	raymarchshader.AddRenderable(sphere)
 
 	// load pbr material
-	albedotexture, err := texture.MakeFromPath(texturepath+"/albedo.png", gl.RGBA, gl.RGBA)
+	albedotexture, err := texture.MakeFromPathFixedChannels(texturepath+"/albedo.png", 4, gl.RGBA, gl.RGBA)
 	if err != nil {
 		panic(err)
 	}
 	albedotexture.GenMipmap()
-	normaltexture, err := texture.MakeFromPath(texturepath+"/normal.png", gl.RGBA, gl.RGBA)
+	normaltexture, err := texture.MakeFromPathFixedChannels(texturepath+"/normal.png", 4, gl.RGBA, gl.RGBA)
 	if err != nil {
 		panic(err)
 	}
@@ -59,7 +59,7 @@ func MakePbrPass(width, height int, shaderpath, texturepath string, cubemap *tex
 		panic(err)
 	}
 	roughnesstexture.GenMipmap()
-	aotexture, err := texture.MakeFromPath(texturepath+"/ao.png", gl.RGBA, gl.RGBA)
+	aotexture, err := texture.MakeFromPathFixedChannels(texturepath+"/ao.png", 4, gl.RGBA, gl.RGBA)
 	if err != nil {
 		panic(err)
 	}
@@ -137,6 +137,11 @@ func (rmp *PbrPass) OnMouseButtonPress(leftPressed, rightPressed bool) bool {
 
 // OnMouseScroll is a callback handler that is called every time the mouse wheel moves.
 func (rmp *PbrPass) OnMouseScroll(x, y float64) bool {
+	return false
+}
+
+// OnResize is a callback handler that is called every time the window is resized.
+func (rmp *PbrPass) OnResize(width, height int) bool {
 	return false
 }
 

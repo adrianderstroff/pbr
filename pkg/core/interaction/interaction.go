@@ -14,6 +14,7 @@ type Interaction struct {
 	mouseButtonHandlers []MouseButtonHandler
 	mouseScrollHandlers []MouseScrollHandler
 	keyPressHandlers    []KeyPressHandler
+	resizeHandlers      []ResizeHandler
 
 	prevPosX, prevPosY float64
 	posInit            bool
@@ -28,6 +29,7 @@ type Interactable interface {
 	OnMouseButtonPress(leftPressed, rightPressed bool) bool
 	OnMouseScroll(x, y float64) bool
 	OnKeyPress(key, action, mods int) bool
+	OnResize(width, height int) bool
 }
 
 // CursorPosHandler is called every time the cursor position changes.
@@ -42,7 +44,10 @@ type MouseScrollHandler func(float64, float64) bool
 // KeyPressHandler is called every time a keyboard key is pressed or released.
 type KeyPressHandler func(int, int, int) bool
 
-// Make constructs an Interaction and registers all necessary handlers for the window.
+// ResizeHandler is called every time the window is resized.
+type ResizeHandler func(int, int) bool
+
+// New constructs an Interaction and registers all necessary handlers for the window.
 func New(window *window.Window) *Interaction {
 	// construct Interaction
 	interaction := Interaction{
@@ -62,6 +67,7 @@ func New(window *window.Window) *Interaction {
 	window.Window.SetMouseButtonCallback(interaction.onMouseButton)
 	window.Window.SetScrollCallback(interaction.onMouseScroll)
 	window.Window.SetKeyCallback(interaction.onKeyPress)
+	window.Window.SetSizeCallback(interaction.onResize)
 
 	return &interaction
 }
@@ -78,6 +84,7 @@ func (interaction *Interaction) AddInteractable(interactable Interactable) {
 	interaction.AddMouseButtonHandler(interactable.OnMouseButtonPress)
 	interaction.AddMouseScrollHandler(interactable.OnMouseScroll)
 	interaction.AddKeyPressHandler(interactable.OnKeyPress)
+	interaction.AddResizeHandler(interactable.OnResize)
 }
 
 // AddCursorPosHandler registers a CursorPosHandler in the Window.
@@ -98,6 +105,11 @@ func (interaction *Interaction) AddMouseScrollHandler(handler MouseScrollHandler
 // AddKeyPressHandler registers a KeyPressHandler in the Window.
 func (interaction *Interaction) AddKeyPressHandler(handler KeyPressHandler) {
 	interaction.keyPressHandlers = append(interaction.keyPressHandlers, handler)
+}
+
+// AddResizeHandler registers a ResizeHandler in the Window.
+func (interaction *Interaction) AddResizeHandler(handler ResizeHandler) {
+	interaction.resizeHandlers = append(interaction.resizeHandlers, handler)
 }
 
 // onCursorPos receives the cursor x and y pos and propagates it to all CusorPosHandlers.
@@ -186,6 +198,15 @@ func (interaction *Interaction) onCursorEnter(w *glfw.Window, entered bool) {
 func (interaction *Interaction) onKeyPress(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
 	for _, handler := range interaction.keyPressHandlers {
 		if handler(int(key), int(action), int(mods)) {
+			break
+		}
+	}
+}
+
+// onResize receives the the new width and height of the window.
+func (interaction *Interaction) onResize(w *glfw.Window, width, height int) {
+	for _, handler := range interaction.resizeHandlers {
+		if handler(width, height) {
 			break
 		}
 	}

@@ -8,9 +8,7 @@ import (
 	"github.com/adrianderstroff/pbr/pkg/view/texture"
 )
 
-/**
- * Creates a noise texture of the specified image dimensions
- */
+// MakeNoiseTexture a noise texture of the specified image dimensions
 func MakeNoiseTexture(width, height int) (texture.Texture, error) {
 	// create random data
 	var data = make([]uint8, width*height*4)
@@ -45,6 +43,18 @@ func MakeNoiseSlice(len int) []float32 {
 	generator := rand.New(seed)
 	for i := 0; i < len; i++ {
 		data[i] = generator.Float32()
+	}
+
+	return data
+}
+
+// MakeConstantSlice returns an array filled with the value of the defined length.
+func MakeConstantSlice(len int, val float32) []float32 {
+	data := make([]float32, len)
+
+	// random number generator
+	for i := 0; i < len; i++ {
+		data[i] = val
 	}
 
 	return data

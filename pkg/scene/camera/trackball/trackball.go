@@ -180,3 +180,9 @@ func (camera *Trackball) OnMouseScroll(x, y float64) bool {
 func (camera *Trackball) OnKeyPress(key, action, mods int) bool {
 	return false
 }
+
+// OnResize is a callback handler that is called every time the window is resized.
+func (camera *Trackball) OnResize(width, height int) bool {
+	camera.width, camera.height = width, height
+	return false
+}

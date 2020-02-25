@@ -12,15 +12,6 @@ out Vertex {
     vec2 uv;
 } o;
 
-#include "constants.glsl"
-
-vec2 spherical(vec3 pos) {
-    vec3 dir = normalize(pos);
-    float u = 0.5 + atan(dir.x, dir.z) / (2*PI);
-    float v = 0.5 + asin(dir.y) / PI;
-    return vec2(u, v);
-}
-
 void main(){
     gl_Position = P * V * M * vec4(pos, 1.0);
     o.pos    = pos;

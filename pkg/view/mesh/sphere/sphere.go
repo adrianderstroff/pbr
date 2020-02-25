@@ -2,7 +2,6 @@
 package sphere
 
 import (
-	"fmt"
 	"math"
 
 	"github.com/adrianderstroff/pbr/pkg/cgm"
@@ -95,7 +94,6 @@ func makeSphereGeometry(hres, vres int, radius float32) mesh.Geometry {
 			if x == w {
 				u = 1
 			}
-			fmt.Println(fmt.Sprintf("%d: %f,%f", x, u, v))
 
 			// add to arrays
 			rings[y] = append(rings[y], mgl32.Vec3{px, py, pz})

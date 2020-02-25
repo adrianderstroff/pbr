@@ -278,10 +278,13 @@ func (shader *Shader) GetHandle() uint32 {
 }
 
 // loadFile returns the contents of a file as a zero terminated string.
+// this version supports #include statements in the shader.
 func loadFile(filepath string) (string, error) {
 	return LoadFileWithIncludes(filepath)
 }
 
+// loadFileOld returns the contents of a file as a zero terminated string.
+// this version uses no prerocessing, so #include statements are not supported.
 func loadFileOld(filepath string) (string, error) {
 	bytes, err := ioutil.ReadFile(filepath)
 

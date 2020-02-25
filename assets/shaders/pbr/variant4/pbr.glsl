@@ -47,7 +47,7 @@ float calculateSpecularCoefficient(in PbrMaterial pbr, in Microfacet micro) {
 }
 
 float calculateSpecularCoefficient2(in PbrMaterial pbr, in Microfacet micro) {
-    return pbr.metallic;
+    return pbr.metallic * pbr.metallic;
 }
 
 /**
@@ -92,15 +92,26 @@ vec3 specular(in PbrMaterial pbr, in Microfacet micro, in Rand rand) {
 }
 
 /**
- * calculate the color of intersection using a Cook-Torrance BRDF.
+ * calculates the specular fraction of the surface.
  */
-vec3 trace(in PbrMaterial pbr, in Microfacet micro, in Rand rand) {
-    // determine indirect illumination
-    vec3 envColor = indirect_light(micro.l, i.pos);
+vec3 specular2(in PbrMaterial pbr, in Microfacet micro, in Rand rand) {
+    // determine half vector
+    micro.h = normalize(micro.l + micro.v);
 
-    // brdf
-    vec3 attenuation = rand.kd * diffuse(pbr, micro, rand) + specular(pbr, micro, rand);
+    // compute dot products
+    float ndotl = saturate(dot(micro.n, micro.l));
+    float ndoth = saturate(dot(micro.n, micro.h));
+    float ldoth = saturate(dot(micro.l, micro.h));
+    float ndotv = saturate(dot(micro.n, micro.v));
 
-    // combine with environment color and ambient occlusion
-    return attenuation * envColor * pbr.ao;
+    // calculate brdf
+    float d = normal_distribution_ggx(ndoth, pbr.a);
+    float g = geometry_smith(ndotl, ndotv, pbr.k);
+    vec3  f = fresnel_schlick(ldoth, pbr.f0);
+    vec3 ggx = (d * f * g);
+
+    // calculate probability
+    float ggxprob = d * ndoth / max(4 * ldoth, 1e-5);
+    float pdf = ndotl / max(ggxprob * rand.ks, 1e-5);
+    return ggx * pdf;
 }

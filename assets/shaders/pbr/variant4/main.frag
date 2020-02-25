@@ -46,6 +46,7 @@ void main(){
     // grab pbr properties
     PbrMaterial pbr;
     pbr.albedo    = vec3(texture(albedoTexture, i.uv));
+    pbr.albedo    = 3*pbr.albedo;
     pbr.normal    = vec3(texture(normalTexture, i.uv));
     pbr.metallic  = texture(metallicTexture,    i.uv).x;
     pbr.roughness = texture(roughnessTexture,   i.uv).x;
@@ -79,17 +80,27 @@ void main(){
         rand.kd = saturate(1.0 - rand.ks);
 
         // determine the reflection depending on the specular properties
+        vec3 attenuation;
         if(rand.r <= rand.ks) {
             // reflected ray
             micro.l = reflect(-micro.v, micro.n);
+            attenuation = rand.ks * specular2(pbr, micro, rand);
+            //attenuation = vec3(1, 0, 0);
         } else {
             // samples the reflected ray using a cosine distribution.
             //micro.l = normalize(random_cosine_dir(micro.n, rand.r1, rand.r2, pbr.a));
-            micro.l = normalize(random_cosine_dir(micro.n, rand.r1, rand.r2, 1));
+            //float roughness = pbr.a;
+            float roughness = pbr.a;
+            micro.l = random_cosine_dir(micro.n, rand.r1, rand.r2, roughness);
+            attenuation = rand.kd * diffuse(pbr, micro, rand);
+            //attenuation = vec3(0, 0, 1);
         }
 
-        // trace the ray and calculate resulting color
-        color += trace(pbr, micro, rand);
+        // determine color of indirect light
+        vec3 envColor = indirect_light(micro.l, i.pos);
+
+        // calculate resulting color
+        color += attenuation * envColor * pbr.ao;
     }
     outColor = color / uSamples;
     outColor = tone_mapping(outColor);

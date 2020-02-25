@@ -12,7 +12,7 @@ import (
 
 const (
 	SHADER_PATH  = "./assets/shaders/"
-	TEX_PATH     = "./assets/images/textures/material2/"
+	TEX_PATH     = "./assets/images/textures/material4/"
 	CUBEMAP_PATH = "./assets/images/cubemap/water/"
 	OUT_PATH     = "./"
 
@@ -29,6 +29,7 @@ func main() {
 	window, _ := window.New(title, int(WIDTH), int(HEIGHT))
 	window.LockFPS(60)
 	interaction := interaction.New(window)
+	interaction.AddInteractable(window)
 	defer window.Close()
 
 	// make camera

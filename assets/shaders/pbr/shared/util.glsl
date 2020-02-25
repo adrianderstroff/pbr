@@ -35,6 +35,28 @@ vec3 random_cosine_dir(in vec3 normal, float r1, float r2, float a) {
 }
 
 /**
+ * returns a random normal following a cosine distribution
+ */
+vec3 random_cosine_dir2(in vec3 normal, float r1, float r2, float a) {
+	// calculate tangent and binormal
+	vec3 n = normalize(normal);
+	vec3 t = (dot(n, vec3(0,1,0)) == 0) ? vec3(1, 0, 0) : vec3(0, 1, 0);
+	vec3 b = cross(t, n);
+	t = cross(n, b);
+
+	float sinTheta = sqrt(r1);
+	float cosTheta = sqrt(1 - sinTheta*sinTheta);
+	float psi = 2 * PI * r2;
+
+	vec3 v1 = cosTheta * n;
+	vec3 v2 = sinTheta * cos(psi) * t;
+	vec3 v3 = sinTheta * sin(psi) * b;
+
+	vec3 dir = v1 + v2 + v3;
+	return normalize(dir);
+}
+
+/**
  * calculates the intersection between a ray and an axis aligned box
  */
 vec3 ray_box_intersection(const vec3 boxMin, const vec3 boxMax, const vec3 o, const vec3 dir) {

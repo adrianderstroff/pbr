@@ -173,6 +173,7 @@ var (
 	GetShaderiv             = ogl.GetShaderiv
 	ReadPixels              = ogl.ReadPixels
 	PolygonMode             = ogl.PolygonMode
+	Viewport                = ogl.Viewport
 )
 
 // Errors
