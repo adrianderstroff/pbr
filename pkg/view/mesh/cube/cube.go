@@ -4,7 +4,6 @@ package cube
 import (
 	"github.com/adrianderstroff/pbr/pkg/core/gl"
 	mesh "github.com/adrianderstroff/pbr/pkg/view/mesh"
-	"github.com/adrianderstroff/realtime-clouds/pkg/view/geometry"
 )
 
 // Make constructs a box with the specified dimensions. If inside is true
@@ -33,7 +32,7 @@ func makeCubeGeometry(width, height, depth float32, inside bool) mesh.Geometry {
 	v6 := []float32{-halfWidth, -halfHeight, -halfDepth}
 	v7 := []float32{halfWidth, halfHeight, -halfDepth}
 	v8 := []float32{halfWidth, -halfHeight, -halfDepth}
-	positions := geometry.Combine(
+	positions := mesh.Combine(
 		// right
 		v3, v4, v7,
 		v7, v4, v8,
@@ -54,7 +53,7 @@ func makeCubeGeometry(width, height, depth float32, inside bool) mesh.Geometry {
 		v5, v8, v6,
 	)
 	if inside {
-		positions = geometry.Combine(
+		positions = mesh.Combine(
 			// right
 			v7, v8, v3,
 			v3, v8, v4,
@@ -81,7 +80,7 @@ func makeCubeGeometry(width, height, depth float32, inside bool) mesh.Geometry {
 	t2 := []float32{0.0, 0.0}
 	t3 := []float32{1.0, 1.0}
 	t4 := []float32{1.0, 0.0}
-	uvs := geometry.Repeat(geometry.Combine(t1, t2, t3, t3, t2, t4), 6)
+	uvs := mesh.Repeat(mesh.Combine(t1, t2, t3, t3, t2, t4), 6)
 
 	// normals
 	right := []float32{1.0, 0.0, 0.0}

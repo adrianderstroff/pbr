@@ -1,4 +1,5 @@
 #include "constants.glsl"
+#include "color.glsl"
 
 /**
  * util function to clamp a value between 0 and 1
@@ -36,12 +37,12 @@ vec3 random_cosine_dir(in vec3 normal, float r1, float r2, float a) {
 
 /**
  * returns a random normal following a cosine distribution
- * https://www.particleincell.com/2015/cosine-distribution/
+ * https://www.particleincelsl.com/2015/cosine-distribution/
  */
 vec3 random_cosine_dir2(in vec3 normal, float r1, float r2, float a) {
 	// calculate tangent and binormal
 	vec3 n = normalize(normal);
-	vec3 t = (dot(n, vec3(0,1,0)) == 0) ? vec3(1, 0, 0) : vec3(0, 1, 0);
+	vec3 t = (dot(n, vec3(0,1,0)) == 1) ? vec3(1, 0, 0) : vec3(0, 1, 0);
 	vec3 b = cross(t, n);
 	t = cross(n, b);
 
@@ -50,11 +51,33 @@ vec3 random_cosine_dir2(in vec3 normal, float r1, float r2, float a) {
 	float psi = 2 * PI * r2;
 
 	vec3 v1 = cosTheta * n;
-	vec3 v2 = sinTheta * cos(psi) * t;
-	vec3 v3 = sinTheta * sin(psi) * b;
+	vec3 v2 = sinTheta * cos(psi) * t * a;
+	vec3 v3 = sinTheta * sin(psi) * b * a;
 
 	vec3 dir = v1 + v2 + v3;
 	return normalize(dir);
+}
+
+/*
+ * calculates the color from the direction projected onto the plane defined
+ * by the normal.
+ */
+vec3 color_direction(in vec3 normal, in vec3 dir) {
+	// calculate tangent and binormal
+	vec3 n = normalize(normal);
+	vec3 t = (dot(n, vec3(0,1,0)) == 1) ? vec3(1, 0, 0) : vec3(0, 1, 0);
+	vec3 b = cross(t, n);
+	t = cross(n, b);
+
+	float x = dot(dir, b);
+	float y = dot(dir, t);
+
+	float h = (atan(-y, -x) + PI) / (2*PI);
+	float s = 1;
+	float v = length(vec2(x, y));
+	v = 1;
+
+	return hsv2rgb(vec3(h, s, v));
 }
 
 /**
@@ -70,5 +93,7 @@ vec3 ray_box_intersection(const vec3 boxMin, const vec3 boxMax, const vec3 o, co
     float tNear = max(max(t1.x, t1.y), t1.z);
     float tFar = min(min(t2.x, t2.y), t2.z);
 
-	return o + tNear * d;
+	float t = min(tNear, tFar);
+
+	return o + t * d;
 }

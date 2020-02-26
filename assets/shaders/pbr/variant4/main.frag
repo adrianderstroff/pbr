@@ -28,6 +28,7 @@ layout(binding=2) uniform sampler2D   normalTexture;
 layout(binding=3) uniform sampler2D   metallicTexture;
 layout(binding=4) uniform sampler2D   roughnessTexture;
 layout(binding=5) uniform sampler2D   aoTexture;
+layout(binding=6) uniform sampler2D   noiseTexture;
 
 //--------------------------------------------------------------------------//
 // output color                                                             //
@@ -70,6 +71,7 @@ void main(){
     // calculate for multiple samples
     vec3 color = vec3(0);
     for(int s = 0; s < uSamples; s++) {
+        vec4 rdir = texture(normalTexture, i.uv);
         // update random values
         rand.r  = uRandR[s];
         rand.r1 = uRandX[s];
@@ -93,7 +95,8 @@ void main(){
             float roughness = 1;
             micro.l = random_cosine_dir2(micro.n, rand.r1, rand.r2, roughness);
             attenuation = rand.kd * diffuse(pbr, micro, rand);
-            //attenuation = vec3(0, 0, 1);
+
+            //attenuation = color_direction(micro.n, micro.l);
         }
 
         // determine color of indirect light

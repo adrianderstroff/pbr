@@ -26,6 +26,10 @@ type PbrPass struct {
 	metallictexture  texture.Texture
 	roughnesstexture texture.Texture
 	aotexture        texture.Texture
+	// time
+	time float32
+	// random
+	noisetexture texture.Texture
 }
 
 // MakePbrPass creates a pbr pass
@@ -76,6 +80,13 @@ func MakePbrPass(width, height int, shaderpath, texturepath string, cubemap *tex
 	raymarchshader.UpdateFloat32("uGlobalRoughness", 0.1)
 	raymarchshader.Release()
 
+	// random texture
+	noisetexture, err := MakeNoiseTexture(width, height)
+	if err != nil {
+		panic(err)
+	}
+	noisetexture.SetMinMagFilter(gl.NEAREST, gl.NEAREST)
+
 	return PbrPass{
 		raymarchshader: raymarchshader,
 		cubemap:        *cubemap,
@@ -89,6 +100,8 @@ func MakePbrPass(width, height int, shaderpath, texturepath string, cubemap *tex
 		metallictexture:  metallictexture,
 		roughnesstexture: roughnesstexture,
 		aotexture:        aotexture,
+		time:             0,
+		noisetexture:     noisetexture,
 	}
 }
 
@@ -100,12 +113,20 @@ func (rmp *PbrPass) Render(camera camera.Camera) {
 		gl.PolygonMode(gl.FRONT_AND_BACK, gl.FILL)
 	}
 
+	/* r1 := MakeConstantSlice(100, rmp.time)
+	rmp.raymarchshader.Use()
+	rmp.raymarchshader.UpdateFloat32Slice("uRandX", r1)
+	rmp.raymarchshader.UpdateFloat32Slice("uRandY", r1)
+	rmp.raymarchshader.Release()
+	rmp.time = cgm.Mod32(rmp.time+0.0001, 1.0) */
+
 	rmp.cubemap.Bind(0)
 	rmp.albedotexture.Bind(1)
 	rmp.normaltexture.Bind(2)
 	rmp.metallictexture.Bind(3)
 	rmp.roughnesstexture.Bind(4)
 	rmp.aotexture.Bind(5)
+	rmp.noisetexture.Bind(6)
 
 	rmp.raymarchshader.Use()
 	rmp.raymarchshader.UpdateMat4("V", camera.GetView())
@@ -121,6 +142,7 @@ func (rmp *PbrPass) Render(camera camera.Camera) {
 	rmp.metallictexture.Unbind()
 	rmp.roughnesstexture.Unbind()
 	rmp.aotexture.Unbind()
+	rmp.noisetexture.Unbind()
 
 	gl.PolygonMode(gl.FRONT_AND_BACK, gl.FILL)
 }
