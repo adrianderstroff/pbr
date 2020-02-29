@@ -5,8 +5,8 @@
 //--------------------------------------------------------------------------//
 in Vertex {
     vec3 pos;
-    vec3 normal;
     vec2 uv;
+    vec3 normal;
 } i;
 
 //--------------------------------------------------------------------------//
@@ -71,11 +71,11 @@ void main(){
     // calculate for multiple samples
     vec3 color = vec3(0);
     for(int s = 0; s < uSamples; s++) {
-        vec4 rdir = texture(normalTexture, i.uv);
+        vec4 rdir = texture(noiseTexture, i.uv);
         // update random values
-        rand.r  = uRandR[s];
-        rand.r1 = uRandX[s];
-        rand.r2 = uRandY[s];
+        rand.r  = fract(uRandR[s] + rdir.z);
+        rand.r1 = fract(uRandX[s] + rdir.x);
+        rand.r2 = fract(uRandY[s] + rdir.y);
 
         // determine ks and kd
         rand.ks = calculateSpecularCoefficient2(pbr, micro);
@@ -87,21 +87,14 @@ void main(){
             // reflected ray
             micro.l = reflect(-micro.v, micro.n);
             attenuation = rand.ks * specular2(pbr, micro, rand);
-            //attenuation = vec3(1, 0, 0);
         } else {
             // samples the reflected ray using a cosine distribution.
-            //micro.l = normalize(random_cosine_dir(micro.n, rand.r1, rand.r2, pbr.a));
-            //float roughness = pbr.a;
-            float roughness = 1;
-            micro.l = random_cosine_dir2(micro.n, rand.r1, rand.r2, roughness);
+            micro.l = random_cosine_dir2(micro.n, rand.r1, rand.r2, pbr.a);
             attenuation = rand.kd * diffuse(pbr, micro, rand);
-
-            //attenuation = color_direction(micro.n, micro.l);
         }
 
         // determine color of indirect light
         vec3 envColor = indirect_light(micro.l, i.pos);
-        //envColor = vec3(1,1,1);
 
         // calculate resulting color
         color += attenuation * envColor * pbr.ao;

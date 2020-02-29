@@ -70,9 +70,10 @@ func MakePbrPass(width, height int, shaderpath, texturepath string, cubemap *tex
 	aotexture.GenMipmap()
 
 	// random value array
-	r := MakeNoiseSlice(100)
-	r1 := MakeNoiseSlice(100)
-	r2 := MakeNoiseSlice(100)
+	noise := MakeNoise()
+	r := noise.MakeNoiseSlice(100)
+	r1 := noise.MakeNoiseSlice(100)
+	r2 := noise.MakeNoiseSlice(100)
 	raymarchshader.Use()
 	raymarchshader.UpdateFloat32Slice("uRandR", r)
 	raymarchshader.UpdateFloat32Slice("uRandX", r1)
@@ -81,7 +82,7 @@ func MakePbrPass(width, height int, shaderpath, texturepath string, cubemap *tex
 	raymarchshader.Release()
 
 	// random texture
-	noisetexture, err := MakeNoiseTexture(width, height)
+	noisetexture, err := noise.MakeNoiseTexture(4*width, 4*height)
 	if err != nil {
 		panic(err)
 	}

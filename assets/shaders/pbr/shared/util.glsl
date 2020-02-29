@@ -84,7 +84,7 @@ vec3 color_direction(in vec3 normal, in vec3 dir) {
  * calculates the intersection between a ray and an axis aligned box
  */
 vec3 ray_box_intersection(const vec3 boxMin, const vec3 boxMax, const vec3 o, const vec3 dir) {
-	vec3 d = (-1) * dir;
+	vec3 d = (1) * dir;
 	
 	vec3 tMin = (boxMin - o) / d;
     vec3 tMax = (boxMax - o) / d;
@@ -93,7 +93,7 @@ vec3 ray_box_intersection(const vec3 boxMin, const vec3 boxMax, const vec3 o, co
     float tNear = max(max(t1.x, t1.y), t1.z);
     float tFar = min(min(t2.x, t2.y), t2.z);
 
-	float t = min(tNear, tFar);
+	float t = (tNear >= 0) ? tNear : tFar;
 
 	return o + t * d;
 }
