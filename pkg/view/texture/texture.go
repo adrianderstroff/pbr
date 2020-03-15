@@ -23,25 +23,16 @@ func (tex *Texture) Delete() {
 }
 
 // GenMipmap generates mipmap levels.
-// Chooses the two mipmaps that most closely match the size of the pixel being textured and uses the GL_LINEAR criterion to produce a texture value.
+// Chooses the two mipmaps that most closely match the size of the pixel being
+// textured and uses the GL_LINEAR criterion to produce a texture value.
 func (tex *Texture) GenMipmap() {
 	tex.Bind(0)
-	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR)
-	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR_MIPMAP_LINEAR)
 	gl.GenerateMipmap(tex.target)
 	tex.Unbind()
 }
 
-// GenMipmapNearest generates mipmap levels.
-// Chooses the mipmap that most closely matches the size of the pixel being textured and uses the GL_LINEAR criterion to produce a texture value.
-func (tex *Texture) GenMipmapNearest() {
-	tex.Bind(0)
-	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST_MIPMAP_NEAREST)
-	gl.GenerateMipmap(tex.target)
-	tex.Unbind()
-}
-
-// SetMinMagFilter sets the filter to determine which behaviour is used for level of detail functions.
+// SetMinMagFilter sets the filter to determine which behaviour is used for
+// level of detail functions.
 func (tex *Texture) SetMinMagFilter(min, mag int32) {
 	tex.Bind(0)
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, min)

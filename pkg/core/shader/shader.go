@@ -284,7 +284,7 @@ func loadFile(filepath string) (string, error) {
 }
 
 // loadFileOld returns the contents of a file as a zero terminated string.
-// this version uses no prerocessing, so #include statements are not supported.
+// this version uses no preprocessing, so #include statements are not supported.
 func loadFileOld(filepath string) (string, error) {
 	bytes, err := ioutil.ReadFile(filepath)
 
@@ -315,7 +315,8 @@ func compileShader(source string, shaderType uint32) (uint32, error) {
 }
 
 // getGLError checks for an error during shader compilation.
-// If an error has been occured it will return this error with a human readable error message.
+// If an error has been occured it will return this error with a human readable
+// error message.
 func getGLError(shader uint32, statusType int) error {
 	var status int32
 	gl.GetShaderiv(shader, gl.COMPILE_STATUS, &status)

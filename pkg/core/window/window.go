@@ -134,6 +134,17 @@ func (window *Window) OnMouseScroll(x, y float64) bool {
 
 // OnKeyPress is a callback handler that is called every time a keyboard key is pressed.
 func (window *Window) OnKeyPress(key, action, mods int) bool {
+	// ignore if button is released
+	if action == int(glfw.Release) {
+		return false
+	}
+
+	// closes the window when escape has been pressed
+	if key == int(glfw.KeyEscape) {
+		window.Window.SetShouldClose(true)
+		return true
+	}
+
 	return false
 }
 

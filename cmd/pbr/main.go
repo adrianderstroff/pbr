@@ -13,7 +13,7 @@ import (
 const (
 	SHADER_PATH  = "./assets/shaders/"
 	TEX_PATH     = "./assets/images/textures/material4/"
-	CUBEMAP_PATH = "./assets/images/cubemap/water/"
+	CUBEMAP_PATH = "./assets/images/cubemap/hdr/"
 	OUT_PATH     = "./"
 
 	WIDTH  int = 800

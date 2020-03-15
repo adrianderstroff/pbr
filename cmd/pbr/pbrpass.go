@@ -82,11 +82,11 @@ func MakePbrPass(width, height int, shaderpath, texturepath string, cubemap *tex
 	raymarchshader.Release()
 
 	// random texture
-	noisetexture, err := noise.MakeNoiseTexture(4*width, 4*height)
+	noisetexture, err := noise.MakeNoiseTexture(2048, 2048)
 	if err != nil {
 		panic(err)
 	}
-	noisetexture.SetMinMagFilter(gl.NEAREST, gl.NEAREST)
+	noisetexture.SetMinMagFilter(gl.LINEAR, gl.LINEAR)
 
 	return PbrPass{
 		raymarchshader: raymarchshader,

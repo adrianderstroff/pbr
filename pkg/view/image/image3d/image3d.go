@@ -12,7 +12,7 @@ import (
 	"github.com/adrianderstroff/pbr/pkg/view/image/image2d"
 )
 
-// Image stores the dimensions, data format and it's pixel data.
+// Image3D stores the dimensions, data format and it's pixel data.
 // It can be used to manipulate single pixels and is used to
 // upload it's data to a texture.
 type Image3D struct {
@@ -20,12 +20,13 @@ type Image3D struct {
 	height    int
 	slices    int
 	channels  int
+	bytedepth int
 	pixelType uint32
 	data      []image2d.Image2D
 }
 
-// Make constructs an image of the specified length x width x height and with all pixels
-// set to the specified rgba value.
+// Make constructs an image of the specified length, width, height and with all
+// pixels set to the specified rgba value.
 func Make(width, height, slices, channels int) (Image3D, error) {
 	// create image data
 	var data []image2d.Image2D
@@ -42,12 +43,14 @@ func Make(width, height, slices, channels int) (Image3D, error) {
 		height:    height,
 		slices:    slices,
 		channels:  channels,
+		bytedepth: 1,
 		pixelType: data[0].GetPixelType(),
 		data:      data,
 	}, nil
 }
 
-// MakeFromData constructs an image of the specified width, height, slices and the specified data.
+// MakeFromData constructs an image of the specified width, height, slices and
+// the specified data.
 func MakeFromData(width, height, slices int, data []uint8) (Image3D, error) {
 	// determine number of channels
 	channels := len(data) / (width * height * slices)
@@ -69,12 +72,13 @@ func MakeFromData(width, height, slices int, data []uint8) (Image3D, error) {
 		height:    height,
 		slices:    slices,
 		channels:  channels,
+		bytedepth: 1,
 		pixelType: uint32(gl.UNSIGNED_BYTE),
 		data:      images,
 	}, nil
 }
 
-// MakeImageFromPath constructs the image data from the specified paths.
+// MakeFromPath constructs the image data from the specified paths.
 // If there is no image at the specified path an error is returned instead.
 // The dimensions of all images must match.
 func MakeFromPath(paths []string) (Image3D, error) {
@@ -103,8 +107,9 @@ func MakeFromPath(paths []string) (Image3D, error) {
 		if first.GetWidth() != image.GetWidth() ||
 			first.GetHeight() != image.GetHeight() ||
 			first.GetChannels() != image.GetChannels() ||
-			first.GetPixelType() != image.GetPixelType() {
-			return Image3D{}, errors.New("Image dimensions or formats don't match.")
+			first.GetPixelType() != image.GetPixelType() ||
+			first.GetByteDepth() != image.GetByteDepth() {
+			return Image3D{}, errors.New("image dimensions or formats don't match")
 		}
 
 		// append images
@@ -116,6 +121,7 @@ func MakeFromPath(paths []string) (Image3D, error) {
 		height:    first.GetHeight(),
 		slices:    len(paths),
 		channels:  first.GetChannels(),
+		bytedepth: first.GetByteDepth(),
 		pixelType: first.GetPixelType(),
 		data:      images,
 	}, nil
@@ -172,6 +178,11 @@ func (image *Image3D) GetChannels() int {
 	return image.channels
 }
 
+// GetByteDepth returns the number of bytes a channel consists of.
+func (image *Image3D) GetByteDepth() int {
+	return image.bytedepth
+}
+
 // GetPixelType gets the data type of the pixel data.
 func (image *Image3D) GetPixelType() uint32 {
 	return image.pixelType
@@ -182,7 +193,7 @@ func (image *Image3D) GetDataPointer() unsafe.Pointer {
 	return gl.Ptr(image.data)
 }
 
-// GetData returns a copy of the images data
+// GetData returns a copy of the images data.
 func (image *Image3D) GetData() []uint8 {
 	// collect data of all slices
 	var data []uint8
@@ -255,5 +266,27 @@ func (image *Image3D) SetRGBA(x, y, z int, r, g, b, a uint8) {
 
 // String pretty prints information about the image.
 func (image Image3D) String() string {
-	return fmt.Sprintf("Image3D (%v,%v,%v) %v", image.width, image.height, image.slices, image.channels)
+	c := getChannelsName(image.channels)
+	d := image.bytedepth * 8
+	return fmt.Sprintf("Image3D (%v,%v,%v) %v %vbit", image.width, image.height,
+		image.slices, c, d)
+}
+
+func getChannelsName(channels int) string {
+	c := "Unknown Channel Number"
+	switch channels {
+	case 1:
+		c = "RED"
+		break
+	case 2:
+		c = "RG"
+		break
+	case 3:
+		c = "RGB"
+		break
+	case 4:
+		c = "RGBA"
+		break
+	}
+	return c
 }

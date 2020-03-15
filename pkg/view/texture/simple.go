@@ -21,7 +21,9 @@ func MakeEmpty() Texture {
 // Data is pointing to the data that is going to be uploaded.
 // Min and mag specify the behaviour when down and upscaling the texture.
 // S and t specify the behaviour at the borders of the image.
-func Make(width, height int, internalformat int32, format, pixelType uint32, data unsafe.Pointer, min, mag, s, t int32) Texture {
+func Make(width, height int, internalformat int32, format, pixelType uint32,
+	data unsafe.Pointer, min, mag, s, t int32) Texture {
+
 	texture := Texture{0, gl.TEXTURE_2D, 0}
 
 	// generate and bind texture
@@ -35,7 +37,8 @@ func Make(width, height int, internalformat int32, format, pixelType uint32, dat
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, t)
 
 	// specify a texture image
-	gl.TexImage2D(gl.TEXTURE_2D, 0, internalformat, int32(width), int32(height), 0, format, pixelType, data)
+	gl.TexImage2D(gl.TEXTURE_2D, 0, internalformat, int32(width), int32(height),
+		0, format, pixelType, data)
 
 	// unbind texture
 	texture.Unbind()
@@ -51,15 +54,18 @@ func MakeColor(width, height int) Texture {
 
 // MakeDepth creates a depth texture of the specfied size.
 func MakeDepth(width, height int) Texture {
-	tex := Make(width, height, gl.DEPTH_COMPONENT, gl.DEPTH_COMPONENT, gl.UNSIGNED_BYTE, nil,
-		gl.LINEAR, gl.LINEAR, gl.CLAMP_TO_BORDER, gl.CLAMP_TO_BORDER)
+	tex := Make(width, height, gl.DEPTH_COMPONENT, gl.DEPTH_COMPONENT,
+		gl.UNSIGNED_BYTE, nil, gl.LINEAR, gl.LINEAR, gl.CLAMP_TO_BORDER,
+		gl.CLAMP_TO_BORDER)
 	return tex
 }
 
 // MakeFromPathFixedChannels creates a texture with the image data specifed in path.
 // The number is enforced no matter how many channels the image in the specified
 // file actually has.
-func MakeFromPathFixedChannels(path string, channels int, internalformat int32, format uint32) (Texture, error) {
+func MakeFromPathFixedChannels(path string, channels int, internalformat int32,
+	format uint32) (Texture, error) {
+
 	image, err := image2d.MakeFromPathFixedChannels(path, channels)
 	if err != nil {
 		return Texture{}, err
@@ -68,7 +74,8 @@ func MakeFromPathFixedChannels(path string, channels int, internalformat int32, 
 	image.FlipY()
 
 	return Make(image.GetWidth(), image.GetHeight(), internalformat, format,
-		image.GetPixelType(), image.GetDataPointer(), gl.NEAREST, gl.NEAREST, gl.CLAMP_TO_EDGE, gl.CLAMP_TO_EDGE), nil
+		image.GetPixelType(), image.GetDataPointer(), gl.NEAREST, gl.NEAREST,
+		gl.CLAMP_TO_EDGE, gl.CLAMP_TO_EDGE), nil
 }
 
 // MakeFromPath creates a texture with the image data specifed in path.
@@ -81,22 +88,43 @@ func MakeFromPath(path string, internalformat int32, format uint32) (Texture, er
 	image.FlipY()
 
 	return Make(image.GetWidth(), image.GetHeight(), internalformat, format,
-		image.GetPixelType(), image.GetDataPointer(), gl.NEAREST, gl.NEAREST, gl.CLAMP_TO_EDGE, gl.CLAMP_TO_EDGE), nil
+		image.GetPixelType(), image.GetDataPointer(), gl.NEAREST, gl.NEAREST,
+		gl.CLAMP_TO_EDGE, gl.CLAMP_TO_EDGE), nil
 }
 
 // MakeFromImage grabs the dimensions and information from the image
 func MakeFromImage(image *image2d.Image2D, internalformat int32, format uint32) Texture {
 	return Make(image.GetWidth(), image.GetHeight(), internalformat, format,
-		image.GetPixelType(), image.GetDataPointer(), gl.NEAREST, gl.NEAREST, gl.CLAMP_TO_EDGE, gl.CLAMP_TO_EDGE)
+		image.GetPixelType(), image.GetDataPointer(), gl.NEAREST, gl.NEAREST,
+		gl.CLAMP_TO_EDGE, gl.CLAMP_TO_EDGE)
 }
 
 // MakeFromData creates a texture
-func MakeFromData(data []uint8, width, height int, internalformat int32, format uint32) (Texture, error) {
+func MakeFromData(data []uint8, width, height int, internalformat int32,
+	format uint32) (Texture, error) {
+
 	image, err := image2d.MakeFromData(width, height, data)
 	if err != nil {
 		return Texture{}, err
 	}
 
 	return Make(image.GetWidth(), image.GetHeight(), internalformat, format,
-		image.GetPixelType(), image.GetDataPointer(), gl.NEAREST, gl.NEAREST, gl.CLAMP_TO_EDGE, gl.CLAMP_TO_EDGE), nil
+		image.GetPixelType(), image.GetDataPointer(), gl.NEAREST, gl.NEAREST,
+		gl.CLAMP_TO_EDGE, gl.CLAMP_TO_EDGE), nil
+}
+
+// determineFormat returns the appropriate texture format for the given number
+// of channels
+func determineFormat(channels int) int {
+	switch channels {
+	case 1:
+		return gl.RED
+	case 2:
+		return gl.RG
+	case 3:
+		return gl.RGB
+	case 4:
+		return gl.RGBA
+	}
+	return gl.RGBA
 }

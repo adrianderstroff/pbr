@@ -8,6 +8,9 @@ uniform samplerCube cubemap;
 
 out vec3 color;
 
+#include "tonemapping.glsl"
+
 void main() {             
-    color = vec3(texture(cubemap, i.uvw));
+    color = texture(cubemap, i.uvw).rgb;
+    color = tone_mapping(color);
 } 

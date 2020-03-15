@@ -18,3 +18,8 @@ After getting all dependencies the project should work without any errors.
 ## Theory
 
 TODO
+
+## TODOs
+
+- Make Shader Error Message more readable
+- Add HDR Support

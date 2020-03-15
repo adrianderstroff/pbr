@@ -28,6 +28,46 @@ struct Rand {
     float ks;
 };
 
+PbrMaterial makePbrMaterial() {
+    PbrMaterial pbr;
+    pbr.albedo    = vec3(texture(albedoTexture, i.uv));
+    pbr.albedo    = 3*pbr.albedo;
+    pbr.normal    = vec3(texture(normalTexture, i.uv));
+    pbr.metallic  = texture(metallicTexture,    i.uv).x;
+    pbr.roughness = texture(roughnessTexture,   i.uv).x;
+    pbr.roughness = max(pbr.roughness, uGlobalRoughness);
+    pbr.ao        = texture(aoTexture,          i.uv).x;
+    pbr.f0        = mix(vec3(0.04), pbr.albedo, pbr.metallic);
+    pbr.a         = pbr.roughness;
+    pbr.k         = (pbr.a * pbr.a) / 2.0;
+    return pbr;
+}
+
+Microfacet makeMicroFacet(in PbrMaterial pbr, vec3 pos, vec3 normal) {
+    Microfacet micro;
+    micro.n = normal_mapping(normal, pbr.normal);
+    micro.v = normalize(uCameraPos - pos);
+    return micro;
+}
+
+Rand makeRand() {
+    Rand rand;
+    rand.r  = 0;
+    rand.r1 = 0;
+    rand.r2 = 0;
+    return rand;
+}
+
+/**
+ * get the next set of random numbers for the s-th sample.
+ */
+void nextRand(inout Rand rand, in int s) {
+    vec4 rdir = texture(noiseTexture, i.uv);
+    rand.r  = fract(uRandR[s] + rdir.z);
+    rand.r1 = fract(uRandX[s] + rdir.x);
+    rand.r2 = fract(uRandY[s] + rdir.y);
+}
+
 /**
  * calculates how reflective the intersected point of the geometry is.
  */
@@ -42,8 +82,8 @@ float calculateSpecularCoefficient(in PbrMaterial pbr, in Microfacet micro) {
     vec3 f = fresnel_schlick(saturate(dot(l, h)), pbr.f0);
 
     // calculate specular coefficient
-    //return saturate(length(f)) * pbr.metallic * pbr.metallic;
-    return saturate(length(f)) * pbr.metallic;
+    return saturate(length(f)) * pbr.metallic * pbr.metallic;
+    //return saturate(length(f)) * pbr.metallic;
 }
 
 float calculateSpecularCoefficient2(in PbrMaterial pbr, in Microfacet micro) {

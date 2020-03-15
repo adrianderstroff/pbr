@@ -27,14 +27,19 @@ func MakeCubemapPass(shaderpath, cubemappath string) CubemapPass {
 
 	// create cubemap
 	var (
-		right  = cubemappath + "right.jpg"
-		left   = cubemappath + "left.jpg"
-		top    = cubemappath + "top.jpg"
-		bottom = cubemappath + "bottom.jpg"
-		front  = cubemappath + "front.jpg"
-		back   = cubemappath + "back.jpg"
+		right  = cubemappath + "right.hdr"
+		left   = cubemappath + "left.hdr"
+		top    = cubemappath + "top.hdr"
+		bottom = cubemappath + "bottom.hdr"
+		front  = cubemappath + "front.hdr"
+		back   = cubemappath + "back.hdr"
 	)
-	cubemap, err := texture.MakeCubeMap(right, left, top, bottom, front, back, false)
+	cubemap, err := texture.MakeCubeMap(right, left, top, bottom, front, back, false, gl.RGBA)
+	if err != nil {
+		panic(err)
+	}
+
+	err = gl.GetError()
 	if err != nil {
 		panic(err)
 	}
