@@ -35,9 +35,9 @@ func Make(width, height, channels int) (Image2D, error) {
 }
 
 // MakeFromData constructs an image of the specified width and height and the specified data.
-func MakeFromData(width, height int, data []uint8) (Image2D, error) {
+func MakeFromData(width, height, channels int, data []uint8) (Image2D, error) {
 	// data is stored as rgba value even if data is one channel only
-	channels := len(data) / (width * height)
+	bytedepth := len(data) / (width * height * channels)
 
 	// early return if invalid dimensions had been specified
 	err := checkDimensions(width, height, channels)
@@ -45,12 +45,18 @@ func MakeFromData(width, height int, data []uint8) (Image2D, error) {
 		return Image2D{}, err
 	}
 
+	// get the right pixeltype
+	pixeltype, err := getPixelTypeFromByteDepth(bytedepth)
+	if err != nil {
+		return Image2D{}, err
+	}
+
 	return Image2D{
-		pixelType: uint32(gl.UNSIGNED_BYTE),
+		pixelType: uint32(pixeltype),
 		width:     width,
 		height:    height,
 		channels:  channels,
-		bytedepth: 1,
+		bytedepth: bytedepth,
 		data:      data,
 	}, nil
 }

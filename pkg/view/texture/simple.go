@@ -103,7 +103,11 @@ func MakeFromImage(image *image2d.Image2D, internalformat int32, format uint32) 
 func MakeFromData(data []uint8, width, height int, internalformat int32,
 	format uint32) (Texture, error) {
 
-	image, err := image2d.MakeFromData(width, height, data)
+	// determine channels
+	channels := channelsFromFormat(format)
+
+	// create an image2d from the data and format
+	image, err := image2d.MakeFromData(width, height, channels, data)
 	if err != nil {
 		return Texture{}, err
 	}

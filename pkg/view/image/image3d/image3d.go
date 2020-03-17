@@ -51,20 +51,25 @@ func Make(width, height, slices, channels int) (Image3D, error) {
 
 // MakeFromData constructs an image of the specified width, height, slices and
 // the specified data.
-func MakeFromData(width, height, slices int, data []uint8) (Image3D, error) {
+func MakeFromData(width, height, slices, channels int, data []uint8) (Image3D, error) {
 	// determine number of channels
-	channels := len(data) / (width * height * slices)
+	bytedepth := len(data) / (width * height * slices * channels)
 
 	// create the individual images
 	var images []image2d.Image2D
 	size := width * height * channels
 	for i := 0; i < slices; i++ {
 		s, e := i*size, (i+1)*size
-		image, err := image2d.MakeFromData(width, height, data[s:e])
+		image, err := image2d.MakeFromData(width, height, channels, data[s:e])
 		if err != nil {
 			return Image3D{}, err
 		}
 		images = append(images, image)
+	}
+
+	pixeltype, err := getPixelTypeFromByteDepth(bytedepth)
+	if err != nil {
+		return Image3D{}, err
 	}
 
 	return Image3D{
@@ -72,8 +77,8 @@ func MakeFromData(width, height, slices int, data []uint8) (Image3D, error) {
 		height:    height,
 		slices:    slices,
 		channels:  channels,
-		bytedepth: 1,
-		pixelType: uint32(gl.UNSIGNED_BYTE),
+		bytedepth: bytedepth,
+		pixelType: uint32(pixeltype),
 		data:      images,
 	}, nil
 }
@@ -289,4 +294,17 @@ func getChannelsName(channels int) string {
 		break
 	}
 	return c
+}
+
+// getPixelTypeFromByteDepth returns the appropriate pixel type for the given
+// bytedepth. So far online a bytedepth of 1 and 4 is supported.
+func getPixelTypeFromByteDepth(bytedepth int) (int, error) {
+	switch bytedepth {
+	case 1:
+		return gl.UNSIGNED_BYTE, nil
+	case 4:
+		return gl.FLOAT, nil
+	}
+
+	return 0, errors.New("bytedepth not supported")
 }

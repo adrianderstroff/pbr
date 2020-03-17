@@ -3,6 +3,7 @@ package main
 import (
 	"math"
 
+	"github.com/adrianderstroff/pbr/pkg/cgm"
 	"github.com/adrianderstroff/pbr/pkg/core/gl"
 	"github.com/adrianderstroff/pbr/pkg/core/shader"
 	"github.com/adrianderstroff/pbr/pkg/scene/camera"
@@ -14,18 +15,24 @@ import (
 
 // PbrPass encapsulates all relevant data for rendering a mesh using physically based rendering.
 type PbrPass struct {
-	raymarchshader shader.Shader
+	texturedshader shader.Shader
+	simpleshader   shader.Shader
 	cubemap        texture.Texture
 	// uniform variables
 	samples         int32
 	globalroughness float32
 	wireframe       bool
+	usesimple       bool
 	// pbr textures
 	albedotexture    texture.Texture
 	normaltexture    texture.Texture
 	metallictexture  texture.Texture
 	roughnesstexture texture.Texture
 	aotexture        texture.Texture
+	// simple parameters
+	metallic       float32
+	roughness      float32
+	lightintensity float32
 	// time
 	time float32
 	// random
@@ -36,11 +43,16 @@ type PbrPass struct {
 func MakePbrPass(width, height int, shaderpath, texturepath string, cubemap *texture.Texture) PbrPass {
 	// create shaders
 	sphere := sphere.Make(20, 25, 1, gl.TRIANGLES)
-	raymarchshader, err := shader.Make(shaderpath+"/pbr/variant4/main.vert", shaderpath+"/pbr/variant4/main.frag")
+	texturedshader, err := shader.Make(shaderpath+"/pbr/variant4/main.vert", shaderpath+"/pbr/variant4/main.frag")
 	if err != nil {
 		panic(err)
 	}
-	raymarchshader.AddRenderable(sphere)
+	simpleshader, err := shader.Make(shaderpath+"/pbr/simple/main.vert", shaderpath+"/pbr/simple/main.frag")
+	if err != nil {
+		panic(err)
+	}
+	texturedshader.AddRenderable(sphere)
+	simpleshader.AddRenderable(sphere)
 
 	// load pbr material
 	albedotexture, err := texture.MakeFromPathFixedChannels(texturepath+"/albedo.png", 4, gl.RGBA, gl.RGBA)
@@ -74,12 +86,28 @@ func MakePbrPass(width, height int, shaderpath, texturepath string, cubemap *tex
 	r := noise.MakeNoiseSlice(100)
 	r1 := noise.MakeNoiseSlice(100)
 	r2 := noise.MakeNoiseSlice(100)
-	raymarchshader.Use()
-	raymarchshader.UpdateFloat32Slice("uRandR", r)
-	raymarchshader.UpdateFloat32Slice("uRandX", r1)
-	raymarchshader.UpdateFloat32Slice("uRandY", r2)
-	raymarchshader.UpdateFloat32("uGlobalRoughness", 0.1)
-	raymarchshader.Release()
+
+	// update textured shader
+	texturedshader.Use()
+	texturedshader.UpdateFloat32Slice("uRandR", r)
+	texturedshader.UpdateFloat32Slice("uRandX", r1)
+	texturedshader.UpdateFloat32Slice("uRandY", r2)
+	texturedshader.UpdateFloat32("uGlobalRoughness", 0.1)
+	texturedshader.Release()
+
+	// update simple shader
+	var metallic float32 = 0.0
+	var roughness float32 = 0.5
+	var lightintensity float32 = 10
+	simpleshader.Use()
+	simpleshader.UpdateFloat32Slice("uRandR", r)
+	simpleshader.UpdateFloat32Slice("uRandX", r1)
+	simpleshader.UpdateFloat32Slice("uRandY", r2)
+	simpleshader.UpdateVec3("uAlbedo", mgl32.Vec3{1.00, 0.71, 0.29})
+	simpleshader.UpdateFloat32("uMetallic", metallic)
+	simpleshader.UpdateFloat32("uRoughness", roughness)
+	simpleshader.UpdateVec3("uLightColor", mgl32.Vec3{lightintensity, lightintensity, lightintensity})
+	simpleshader.Release()
 
 	// random texture
 	noisetexture, err := noise.MakeNoiseTexture(2048, 2048)
@@ -89,20 +117,27 @@ func MakePbrPass(width, height int, shaderpath, texturepath string, cubemap *tex
 	noisetexture.SetMinMagFilter(gl.LINEAR, gl.LINEAR)
 
 	return PbrPass{
-		raymarchshader: raymarchshader,
+		texturedshader: texturedshader,
+		simpleshader:   simpleshader,
 		cubemap:        *cubemap,
 		// uniform variables
 		samples:         10,
 		globalroughness: 0.1,
 		wireframe:       false,
+		usesimple:       false,
 		// pbr textures
 		albedotexture:    albedotexture,
 		normaltexture:    normaltexture,
 		metallictexture:  metallictexture,
 		roughnesstexture: roughnesstexture,
 		aotexture:        aotexture,
-		time:             0,
-		noisetexture:     noisetexture,
+		// simple parameters
+		metallic:       metallic,
+		roughness:      roughness,
+		lightintensity: lightintensity,
+		// random
+		time:         0,
+		noisetexture: noisetexture,
 	}
 }
 
@@ -114,13 +149,17 @@ func (rmp *PbrPass) Render(camera camera.Camera) {
 		gl.PolygonMode(gl.FRONT_AND_BACK, gl.FILL)
 	}
 
-	/* r1 := MakeConstantSlice(100, rmp.time)
-	rmp.raymarchshader.Use()
-	rmp.raymarchshader.UpdateFloat32Slice("uRandX", r1)
-	rmp.raymarchshader.UpdateFloat32Slice("uRandY", r1)
-	rmp.raymarchshader.Release()
-	rmp.time = cgm.Mod32(rmp.time+0.0001, 1.0) */
+	if rmp.usesimple {
+		rmp.RenderSimple(camera)
+	} else {
+		rmp.RenderTextured(camera)
+	}
 
+	gl.PolygonMode(gl.FRONT_AND_BACK, gl.FILL)
+}
+
+// RenderTextured performs PBR with texture parameters.
+func (rmp *PbrPass) RenderTextured(camera camera.Camera) {
 	rmp.cubemap.Bind(0)
 	rmp.albedotexture.Bind(1)
 	rmp.normaltexture.Bind(2)
@@ -129,13 +168,13 @@ func (rmp *PbrPass) Render(camera camera.Camera) {
 	rmp.aotexture.Bind(5)
 	rmp.noisetexture.Bind(6)
 
-	rmp.raymarchshader.Use()
-	rmp.raymarchshader.UpdateMat4("V", camera.GetView())
-	rmp.raymarchshader.UpdateMat4("P", camera.GetPerspective())
-	rmp.raymarchshader.UpdateMat4("M", mgl32.Ident4())
-	rmp.raymarchshader.UpdateVec3("uCameraPos", camera.GetPos())
-	rmp.raymarchshader.Render()
-	rmp.raymarchshader.Release()
+	rmp.texturedshader.Use()
+	rmp.texturedshader.UpdateMat4("V", camera.GetView())
+	rmp.texturedshader.UpdateMat4("P", camera.GetPerspective())
+	rmp.texturedshader.UpdateMat4("M", mgl32.Ident4())
+	rmp.texturedshader.UpdateVec3("uCameraPos", camera.GetPos())
+	rmp.texturedshader.Render()
+	rmp.texturedshader.Release()
 
 	rmp.cubemap.Unbind()
 	rmp.albedotexture.Unbind()
@@ -144,8 +183,23 @@ func (rmp *PbrPass) Render(camera camera.Camera) {
 	rmp.roughnesstexture.Unbind()
 	rmp.aotexture.Unbind()
 	rmp.noisetexture.Unbind()
+}
 
-	gl.PolygonMode(gl.FRONT_AND_BACK, gl.FILL)
+// RenderSimple performs PBR with simple parameters.
+func (rmp *PbrPass) RenderSimple(camera camera.Camera) {
+	rmp.cubemap.Bind(0)
+	rmp.noisetexture.Bind(1)
+
+	rmp.simpleshader.Use()
+	rmp.simpleshader.UpdateMat4("V", camera.GetView())
+	rmp.simpleshader.UpdateMat4("P", camera.GetPerspective())
+	rmp.simpleshader.UpdateMat4("M", mgl32.Ident4())
+	rmp.simpleshader.UpdateVec3("uCameraPos", camera.GetPos())
+	rmp.simpleshader.Render()
+	rmp.simpleshader.Release()
+
+	rmp.cubemap.Unbind()
+	rmp.noisetexture.Unbind()
 }
 
 // OnCursorPosMove is a callback handler that is called every time the cursor moves.
@@ -189,13 +243,32 @@ func (rmp *PbrPass) OnKeyPress(key, action, mods int) bool {
 		rmp.globalroughness = float32(math.Max(0.0, float64(rmp.globalroughness)))
 	} else if key == int(glfw.KeyT) {
 		rmp.wireframe = !rmp.wireframe
+	} else if key == int(glfw.KeyS) {
+		rmp.usesimple = !rmp.usesimple
+	} else if key == int(glfw.KeyK) {
+		rmp.roughness = cgm.Clamp(rmp.roughness+0.01, 0, 1)
+	} else if key == int(glfw.KeyL) {
+		rmp.roughness = cgm.Clamp(rmp.roughness-0.01, 0, 1)
+	} else if key == int(glfw.KeyM) {
+		rmp.metallic = 1 - rmp.metallic
+	} else if key == int(glfw.KeyI) {
+		rmp.lightintensity = rmp.lightintensity + 0.1
+	} else if key == int(glfw.KeyO) {
+		rmp.lightintensity = cgm.Max32(rmp.lightintensity-0.1, 0.0)
 	}
 
 	// update uniforms
-	rmp.raymarchshader.Use()
-	rmp.raymarchshader.UpdateInt32("uSamples", rmp.samples)
-	rmp.raymarchshader.UpdateFloat32("uGlobalRoughness", rmp.globalroughness)
-	rmp.raymarchshader.Release()
+	rmp.texturedshader.Use()
+	rmp.texturedshader.UpdateInt32("uSamples", rmp.samples)
+	rmp.texturedshader.UpdateFloat32("uGlobalRoughness", rmp.globalroughness)
+	rmp.texturedshader.Release()
+
+	rmp.simpleshader.Use()
+	rmp.simpleshader.UpdateFloat32("uMetallic", rmp.metallic)
+	rmp.simpleshader.UpdateFloat32("uRoughness", rmp.roughness)
+	rmp.simpleshader.UpdateVec3("uLightColor", mgl32.Vec3{rmp.lightintensity,
+		rmp.lightintensity, rmp.lightintensity})
+	rmp.simpleshader.Release()
 
 	return false
 }

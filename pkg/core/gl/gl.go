@@ -116,9 +116,19 @@ var (
 	TexImage3D              = ogl.TexImage3D
 	TexImage2DMultisample   = ogl.TexImage2DMultisample
 	TexImage3DMultisample   = ogl.TexImage3DMultisample
+	GetTexImage             = ogl.GetTexImage
+	GetTexLevelParameterfv  = ogl.GetTexLevelParameterfv
+	GetTexLevelParameteriv  = ogl.GetTexLevelParameteriv
+	GetTexParameterIiv      = ogl.GetTexParameterIiv
+	GetTexParameterIuiv     = ogl.GetTexParameterIuiv
+	GetTexParameteriv       = ogl.GetTexParameteriv
 	GenerateMipmap          = ogl.GenerateMipmap
 	GenFramebuffers         = ogl.GenFramebuffers
+	GenRenderbuffers        = ogl.GenRenderbuffers
+	FramebufferRenderbuffer = ogl.FramebufferRenderbuffer
 	BindFramebuffer         = ogl.BindFramebuffer
+	BindRenderbuffer        = ogl.BindRenderbuffer
+	RenderbufferStorage     = ogl.RenderbufferStorage
 	DeleteFramebuffers      = ogl.DeleteFramebuffers
 	FramebufferTexture2D    = ogl.FramebufferTexture2D
 	DrawBuffers             = ogl.DrawBuffers
@@ -270,6 +280,8 @@ const (
 	TEXTURE_CUBE_MAP_NEGATIVE_X      = ogl.TEXTURE_CUBE_MAP_NEGATIVE_X
 	TEXTURE_CUBE_MAP_NEGATIVE_Y      = ogl.TEXTURE_CUBE_MAP_NEGATIVE_Y
 	TEXTURE_CUBE_MAP_NEGATIVE_Z      = ogl.TEXTURE_CUBE_MAP_NEGATIVE_Z
+	TEXTURE_WIDTH                    = ogl.TEXTURE_WIDTH
+	TEXTURE_HEIGHT                   = ogl.TEXTURE_HEIGHT
 	MAX_TEXTURE_SIZE                 = ogl.MAX_TEXTURE_SIZE
 	MAX_ARRAY_TEXTURE_LAYERS         = ogl.MAX_ARRAY_TEXTURE_LAYERS
 	MAX_3D_TEXTURE_SIZE              = ogl.MAX_3D_TEXTURE_SIZE
@@ -307,6 +319,7 @@ const (
 	ONE                              = ogl.ONE
 	RGB                              = ogl.RGB
 	RGB_INTEGER                      = ogl.RGB_INTEGER
+	RGB16F                           = ogl.RGB16F
 	BGR                              = ogl.BGR
 	BGR_INTEGER                      = ogl.BGR_INTEGER
 	RGBA                             = ogl.RGBA
@@ -315,6 +328,7 @@ const (
 	BGRA_INTEGER                     = ogl.BGRA_INTEGER
 	DEPTH_STENCIL_TEXTURE_MODE       = ogl.DEPTH_STENCIL_TEXTURE_MODE
 	DEPTH_COMPONENT                  = ogl.DEPTH_COMPONENT
+	DEPTH_COMPONENT24                = ogl.DEPTH_COMPONENT24
 	DEPTH_STENCIL                    = ogl.DEPTH_STENCIL
 	STENCIL_INDEX                    = ogl.STENCIL_INDEX
 	UNSIGNED_BYTE                    = ogl.UNSIGNED_BYTE
@@ -392,6 +406,7 @@ const (
 	DYNAMIC_COPY                     = ogl.DYNAMIC_COPY
 	FRAMEBUFFER                      = ogl.FRAMEBUFFER
 	FRAMEBUFFER_COMPLETE             = ogl.FRAMEBUFFER_COMPLETE
+	RENDERBUFFER                     = ogl.RENDERBUFFER
 	DRAW_FRAMEBUFFER                 = ogl.DRAW_FRAMEBUFFER
 	READ_FRAMEBUFFER                 = ogl.READ_FRAMEBUFFER
 	COLOR_ATTACHMENT0                = ogl.COLOR_ATTACHMENT0

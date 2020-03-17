@@ -1,20 +1,18 @@
 package main
 
 import (
-	"fmt"
 	"runtime"
-	"strconv"
 
+	"github.com/adrianderstroff/pbr/pkg/core/gl"
 	"github.com/adrianderstroff/pbr/pkg/core/interaction"
 	"github.com/adrianderstroff/pbr/pkg/core/window"
 	"github.com/adrianderstroff/pbr/pkg/scene/camera/trackball"
 )
 
 const (
-	SHADER_PATH  = "./assets/shaders/"
-	TEX_PATH     = "./assets/images/textures/material4/"
-	CUBEMAP_PATH = "./assets/images/cubemap/hdr/"
-	OUT_PATH     = "./"
+	SHADER_PATH = "./assets/shaders/"
+	IN_PATH     = "./assets/images/textures/hdr/"
+	OUT_PATH    = "./assets/images/cubemap/hdr/"
 
 	WIDTH  int = 800
 	HEIGHT int = 600
@@ -25,7 +23,7 @@ func main() {
 	runtime.LockOSThread()
 
 	// setup window
-	title := "PBR"
+	title := "Generate Cubemap"
 	window, _ := window.New(title, int(WIDTH), int(HEIGHT))
 	window.LockFPS(60)
 	interaction := interaction.New(window)
@@ -37,26 +35,40 @@ func main() {
 	interaction.AddInteractable(&camera)
 
 	// make passes
-	cubemappass := MakeCubemapPass(SHADER_PATH, CUBEMAP_PATH)
-	pbrpass := MakePbrPass(WIDTH, HEIGHT, SHADER_PATH, TEX_PATH, &cubemappass.cubemap)
-	interaction.AddInteractable(&pbrpass)
+	genpass := MakeGenPass(SHADER_PATH, IN_PATH)
+	genpass.Render()
+	cubemap := genpass.GetCubeMap()
+	cubemappass := MakeCubemapPass(SHADER_PATH, cubemap)
+
+	// save all cube map sides to file
+	cubemapimages, err := cubemap.DownloadCubeMapImages(gl.RGB, gl.FLOAT)
+	if err != nil {
+		panic(err)
+	}
+
+	// save all images
+	filenames := []string{
+		"right",
+		"left",
+		"top",
+		"bottom",
+		"front",
+		"back",
+	}
+	for i, img := range cubemapimages {
+		img.SaveToPath(OUT_PATH + filenames[i] + ".hdr")
+	}
 
 	// render loop
 	renderloop := func() {
 		// update title
-		samplecount := strconv.Itoa(int(pbrpass.samples))
-		params := fmt.Sprintf("%v %v - %v %v - %v", samplecount,
-			pbrpass.globalroughness, pbrpass.roughness, pbrpass.metallic,
-			pbrpass.lightintensity)
-
-		window.SetTitle(title + " " + window.GetFPSFormatted() + " " + params)
+		window.SetTitle(title + " " + window.GetFPSFormatted())
 
 		// update camera
 		camera.Update()
 
 		// execute render passes
 		cubemappass.Render(&camera)
-		pbrpass.Render(&camera)
 	}
 	window.RunMainLoop(renderloop)
 }

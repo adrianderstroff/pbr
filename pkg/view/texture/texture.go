@@ -2,6 +2,10 @@
 package texture
 
 import (
+	"fmt"
+
+	"github.com/adrianderstroff/pbr/pkg/view/image/image2d"
+
 	gl "github.com/adrianderstroff/pbr/pkg/core/gl"
 )
 
@@ -75,4 +79,119 @@ func (tex *Texture) Bind(index uint32) {
 func (tex *Texture) Unbind() {
 	tex.texPos = 0
 	gl.BindTexture(tex.target, 0)
+}
+
+// DownloadImage2D texture data from the GPU into an Image2D.
+func (tex *Texture) DownloadImage2D(format, pixeltype uint32) (image2d.Image2D, error) {
+	// bind texture for using the following functions
+	tex.Bind(0)
+	defer tex.Unbind()
+
+	// grab texture dimensions
+	var (
+		width  int32
+		height int32
+	)
+	gl.GetTexLevelParameteriv(tex.target, 0, gl.TEXTURE_WIDTH, &width)
+	gl.GetTexLevelParameteriv(tex.target, 0, gl.TEXTURE_HEIGHT, &height)
+
+	// grab sizes from format and pixel type
+	bytesize := byteSizeFromPixelType(pixeltype)
+	channels := channelsFromFormat(format)
+
+	fmt.Printf("Texture Format (%v,%v) %v channels %vbit\n", width, height,
+		channels, bytesize*8)
+
+	// initialize data
+	data := make([]uint8, width*height*int32(channels*bytesize))
+
+	// download data into buffer
+	gl.GetTexImage(tex.target, 0, format, pixeltype, gl.Ptr(data))
+
+	img, err := image2d.MakeFromData(int(width), int(height), channels, data)
+	if err != nil {
+		return image2d.Image2D{}, err
+	}
+
+	return img, nil
+}
+
+// DownloadCubeMapImages extracts texture data from the GPU into 6 Image2D for
+// each side of the cube map.
+func (tex *Texture) DownloadCubeMapImages(format, pixeltype uint32) ([]image2d.Image2D, error) {
+	// bind texture for using the following functions
+	tex.Bind(0)
+	defer tex.Unbind()
+
+	// grab texture dimensions
+	var (
+		width  int32
+		height int32
+	)
+	gl.GetTexLevelParameteriv(gl.TEXTURE_CUBE_MAP_POSITIVE_X, 0, gl.TEXTURE_WIDTH, &width)
+	gl.GetTexLevelParameteriv(gl.TEXTURE_CUBE_MAP_POSITIVE_X, 0, gl.TEXTURE_HEIGHT, &height)
+
+	// grab sizes from format and pixel type
+	bytesize := byteSizeFromPixelType(pixeltype)
+	channels := channelsFromFormat(format)
+
+	fmt.Printf("Texture Format (%v,%v) %vch %vbit\n", width, height,
+		channels, bytesize*8)
+
+	// initialize data only once
+
+	// download all sides of the cubemap
+	cubeMapImages := make([]image2d.Image2D, 6)
+	for i := 0; i < 6; i++ {
+		// download data of a cubemap side into buffer
+		var target uint32 = gl.TEXTURE_CUBE_MAP_POSITIVE_X + uint32(i)
+		data := make([]uint8, width*height*int32(channels*bytesize))
+		gl.GetTexImage(target, 0, format, pixeltype, gl.Ptr(data))
+
+		// create image2d from data
+		img, err := image2d.MakeFromData(int(width), int(height), channels, data)
+		if err != nil {
+			return []image2d.Image2D{}, err
+		}
+
+		// add to slice
+		cubeMapImages[i] = img
+	}
+
+	return cubeMapImages, nil
+}
+
+func channelsFromFormat(format uint32) int {
+	var channels int = 3
+	switch format {
+	case gl.RED:
+		channels = 1
+		break
+	case gl.RG:
+		channels = 2
+		break
+	case gl.RGB:
+		channels = 3
+		break
+	case gl.RGBA:
+		channels = 4
+		break
+	}
+	return channels
+}
+
+func byteSizeFromPixelType(pixeltype uint32) int {
+	var bytesize int = 3
+	switch pixeltype {
+	case gl.BYTE, gl.UNSIGNED_BYTE:
+		bytesize = 1
+		break
+	case gl.SHORT, gl.UNSIGNED_SHORT:
+		bytesize = 2
+		break
+	case gl.INT, gl.UNSIGNED_INT, gl.FLOAT:
+		bytesize = 4
+		break
+	}
+	return bytesize
 }

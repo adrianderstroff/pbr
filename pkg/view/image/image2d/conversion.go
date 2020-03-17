@@ -13,14 +13,6 @@ func float32SliceToUint8Slice(fls []float32) []uint8 {
 	return bytesToUint8(bytes)
 }
 
-func float64SliceToUint8Slice(fls []float64) []uint8 {
-	var bytes []byte
-	for _, fl := range fls {
-		bytes = append(bytes, float64ToBytes(fl)...)
-	}
-	return bytesToUint8(bytes)
-}
-
 func float32ToBytes(fl float32) []byte {
 	bits := math.Float32bits(fl)
 	bytes := make([]byte, 4)
@@ -28,11 +20,10 @@ func float32ToBytes(fl float32) []byte {
 	return bytes
 }
 
-func float64ToBytes(fl float64) []byte {
-	bits := math.Float64bits(fl)
-	bytes := make([]byte, 8)
-	binary.LittleEndian.PutUint64(bytes, bits)
-	return bytes
+func bytesToFloat32(bytes []byte) float32 {
+	bits := binary.LittleEndian.Uint32(bytes)
+	float := math.Float32frombits(bits)
+	return float
 }
 
 func bytesToUint8(bytes []byte) []uint8 {

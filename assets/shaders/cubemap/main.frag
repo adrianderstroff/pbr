@@ -12,5 +12,5 @@ out vec3 color;
 
 void main() {             
     color = texture(cubemap, i.uvw).rgb;
-    color = tone_mapping(color);
+    //color = tone_mapping(color);
 } 
