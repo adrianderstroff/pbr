@@ -54,7 +54,27 @@ The dot product *(**n** ⋅ **l**)* describes how much of the light illuminates 
 
 Lastly the *dω<sub>i</sub>* describes a small patch on the hemisphere from where the light ray is coming.
 
-**TODO describe radiance**
+### Radiometric Terms
+
+- light energy
+- light flux
+- solid angle
+- radiance
+- irradiance
+
+### Cook-Torrance BRDF
+
+- diffuse term
+- specular term
+- normal distribution function *d()*
+- geometry function *g()*
+- fresnel reflection *f()*
+
+## Acknowledgement
+
+### Obj Models
+
+The models *bunny.obj* and *dragon.obj* are popular reconstructed models of scans taken from the [Stanford 3D Scanning repository](http://graphics.stanford.edu/data/3Dscanrep/).
 
 ## TODOs
 
