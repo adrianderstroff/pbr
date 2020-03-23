@@ -1,4 +1,4 @@
-// Package core provides an abstraction layer on top of OpenGL.
+// Package gl provides an abstraction layer on top of OpenGL.
 // It contains entities that provide utilities to simplify rendering.
 package gl
 
@@ -10,6 +10,7 @@ import (
 
 var state map[uint32]bool
 
+// Init initialized the opengl context.
 func Init() error {
 	// init opengl context
 	if err := ogl.Init(); err != nil {
@@ -46,6 +47,12 @@ func Enable(val uint32) {
 	state[val] = true
 }
 
+// ForcedEnable changes the state of the specified value.
+func ForcedEnable(val uint32) {
+	ogl.Enable(val)
+	state[val] = true
+}
+
 // Disable changes the state of the specified value.
 // If the state of this value is already false then nothing happens.
 func Disable(val uint32) {
@@ -57,6 +64,22 @@ func Disable(val uint32) {
 	// case when the state of this value is true or unknown
 	ogl.Enable(val)
 	state[val] = false
+}
+
+// ForcedDisable changes the state of the specified value.
+func ForcedDisable(val uint32) {
+	ogl.Enable(val)
+	state[val] = false
+}
+
+// Wireframe renders geometry in wireframe mode.
+func Wireframe() {
+	ogl.PolygonMode(ogl.FRONT_AND_BACK, ogl.LINE)
+}
+
+// Fill renders geometry in normal (non wireframe) mode.
+func Fill() {
+	ogl.PolygonMode(ogl.FRONT_AND_BACK, ogl.FILL)
 }
 
 // GetError gets the last occured error and returns it or returns nil if no error occured.
@@ -86,9 +109,8 @@ func GetError() error {
 			errorType = "UNKNOWN ERROR"
 		}
 		return fmt.Errorf("OpenGL error: %v", errorType)
-	} else {
-		return nil
 	}
+	return nil
 }
 
 // Functions adapted from go-gl

@@ -20,15 +20,14 @@ uniform float uMetallic;
 uniform float uRoughness;
 
 //--------------------------------------------------------------------------//
-// textures                                                                 //
-//--------------------------------------------------------------------------//
-layout(binding=0) uniform samplerCube cubemap;
-layout(binding=1) uniform sampler2D   noiseTexture;
-
-//--------------------------------------------------------------------------//
 // output color                                                             //
 //--------------------------------------------------------------------------//
-out vec3 outColor;
+layout (location = 0) out vec3 outColor;
+layout (location = 1) out vec3 outDiffuse;
+layout (location = 2) out vec3 outSpecular;
+layout (location = 3) out vec3 outD;
+layout (location = 4) out vec3 outG;
+layout (location = 5) out vec3 outF;
 
 //--------------------------------------------------------------------------//
 // includes                                                                 //
@@ -38,25 +37,35 @@ out vec3 outColor;
 #include "../shared/normal.glsl"
 #include "pbr.glsl"
 
+vec3 LI() {
+    float dist = length(uLightPos - i.pos);
+    return uLightColor / (dist*dist);
+}
+
+vec3 brdf(in PbrMaterial pbr, in Microfacet micro) {
+    vec3 diffuseColor  = mix(diffuse(pbr), vec3(0), uMetallic);
+    vec3 specularColor = specular(pbr, micro);
+    return specularColor + diffuseColor;
+}
+
 void main(){
     // setup data structures
     PbrMaterial pbr = makePbrMaterial();
-    Microfacet micro = makeMicroFacet(pbr, i.pos, normalize(i.pos));
-
-    // determine the reflection depending on the specular properties
-    vec3 diffuseColor  = diffuse(pbr);
-    vec3 specularColor = specular(pbr, micro);
-    vec3 attenuation = PI * specularColor + mix(diffuseColor, vec3(0), pbr.metallic);
+    Microfacet micro = makeMicroFacet(pbr, i.pos, i.normal);
 
     // cosine angle
     float nDotL = max(dot(micro.l, micro.n), 0.0);
 
-    // light intensity
-    float dist = length(uLightPos - i.pos);
-    vec3 Li = uLightColor / (dist*dist);
-
     // calculate resulting color
-    outColor = attenuation * nDotL * Li;
+    outColor = PI * brdf(pbr, micro) * nDotL * LI();
 
-    outColor = gamma(outColor);
+    // write  resulting colors
+    outColor    = gamma(outColor);
+    outDiffuse  = diffuse(pbr);
+    outSpecular = specular(pbr, micro);
+    outD        = calcD(pbr, micro);
+    outG        = gamma(calcG(pbr, micro));
+    outF        = gamma(calcF(pbr, micro));
+
+    outColor = 0.5*(micro.h + vec3(1));
 }
