@@ -32,7 +32,7 @@ After getting all dependencies the project should work without any errors.
 PBR stands for **Physically Based Rendering** and describes rendering techniques that model how light interacts with a material or medium in a physically plausible manner.
 
 <p align="center">
-![Microfacet Model](https://github.com/adrianderstroff/pbr/tree/master/assets/images/github/microfacet-model.png)
+<img src="https://github.com/adrianderstroff/pbr/blob/master/assets/images/github/microfacet-model.png?raw=true" title="Microfacet Model" />
 </p>
 
 An important component of PBR is the **microfacet model**. Basically each surface can be described as microscopic perfect mirrors (**microfacets**). Depending on how the microfacets are aligned to each other, different kinds of surfaces can be modelled. A microfacet is described by its normal **h**. Are the normals of all microfacets parallel to each other, then the surface is completetly smooth and behaves like a perfect mirror. Are however the microfacet normals distributed in all directions then the surface is really rough as light is scattered in all directions.
