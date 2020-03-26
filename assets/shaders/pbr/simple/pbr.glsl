@@ -3,10 +3,8 @@
 
 struct PbrMaterial {
     vec3  albedo;
-    vec3  normal;
     float metallic;
     float roughness;
-    float ao;
     vec3  f0;
     float a;
     float k;
@@ -19,20 +17,20 @@ struct Microfacet {
     vec3  h;
 };
 
-PbrMaterial makePbrMaterial() {
+// MakePbrMaterial constructs the PBR Material object
+PbrMaterial MakePbrMaterial() {
     PbrMaterial pbr;
     pbr.albedo    = uAlbedo;
-    pbr.normal    = i.normal;
     pbr.metallic  = uMetallic;
     pbr.roughness = uRoughness;
-    pbr.ao        = 1.0;
     pbr.f0        = mix(vec3(0.04), pbr.albedo, pbr.metallic);
     pbr.a         = pbr.roughness * pbr.roughness;
     pbr.k         = ((pbr.roughness+1) * (pbr.roughness+1)) / 8.0;
     return pbr;
 }
 
-Microfacet makeMicroFacet(in PbrMaterial pbr, vec3 pos, vec3 normal) {
+// MakeMicroFacet constructs the micro facet object
+Microfacet MakeMicroFacet(in PbrMaterial pbr, vec3 pos, vec3 normal) {
     Microfacet micro;
     micro.n = normal;
     micro.v = normalize(uCameraPos - pos);
@@ -41,12 +39,12 @@ Microfacet makeMicroFacet(in PbrMaterial pbr, vec3 pos, vec3 normal) {
     return micro;
 }
 
-// calculates the diffuse fraction of the surface.
+// diffuse calculates the diffuse fraction of the surface
 vec3 diffuse(in PbrMaterial pbr) {
     return pbr.albedo / PI;
 }
 
-// calculates the specular fraction of the surface.
+// specular calculates the specular fraction of the surface
 vec3 specular(in PbrMaterial pbr, in Microfacet micro) {
     vec3 v = micro.v;
     vec3 l = micro.l;
@@ -54,9 +52,9 @@ vec3 specular(in PbrMaterial pbr, in Microfacet micro) {
     vec3 h = micro.h;
 
     // calculate brdf
-    float d = normal_distribution_ggx(n, h, pbr.a);
-    float g = geometry_smith(l, v, h, pbr.k);
-    vec3  f = fresnel_schlick(l, h, pbr.f0);
+    float d = NormalDistributionGGX(n, h, pbr.a);
+    float g = GeometrySmith(l, v, n, pbr.k);
+    vec3  f = FresnelSchlick(v, n, pbr.f0);
 
     // calculate normalization
     float ndotl = max(dot(n, l), 0);
@@ -66,24 +64,33 @@ vec3 specular(in PbrMaterial pbr, in Microfacet micro) {
     return (d * f * g) / denom;
 }
 
-// calculates the normal distribution for debugging.
-vec3 calcD(in PbrMaterial pbr, in Microfacet micro) {
-    vec3 n = micro.n;
-    vec3 h = micro.h;
-    float d = normal_distribution_ggx(n, h, pbr.a);
-    return vec3(d);
+// Li returns the radiance of the light at position pos.
+vec3 Li(vec3 pos) {
+    float dist = length(uLightPos - pos);
+    return uLightColor / (dist*dist);
 }
-// calculates the geometric distibution.
-vec3 calcG(in PbrMaterial pbr, in Microfacet micro) {
-    vec3 v = micro.v;
-    vec3 l = micro.l;
-    vec3 h = micro.h;
-    float g = geometry_smith(l, v, h, pbr.k);
-    return vec3(g);
+
+// Brdf calculates the Cook-Torrance BRDF for the given material and surface
+// properties.
+vec3 Brdf(in PbrMaterial pbr, in Microfacet micro) {
+    vec3 F = FresnelSchlick(micro.v, micro.n, pbr.f0);
+    vec3 kD = (vec3(1) - F) * (1-pbr.metallic);
+
+    vec3 diffuseColor  = mix(diffuse(pbr), vec3(0), uMetallic);
+    vec3 specularColor = specular(pbr, micro);
+
+    return specularColor + kD * diffuseColor;
 }
-// calculates the surface reflectance.
-vec3 calcF(in PbrMaterial pbr, in Microfacet micro) {
-    vec3 l = micro.l;
-    vec3 h = micro.h;
-    return fresnel_schlick(l, h, pbr.f0);
+
+// CalcD calculates the normal distribution for debugging.
+vec3 CalcD(in PbrMaterial pbr, in Microfacet micro) {
+    return vec3(NormalDistributionGGX(micro.n, micro.h, pbr.a));
+}
+// CalcG calculates the geometric distibution for debugging.
+vec3 CalcG(in PbrMaterial pbr, in Microfacet micro) {
+    return vec3(GeometrySmith(micro.l, micro.v, micro.n, pbr.k));
+}
+// CalcF calculates the surface reflectance for debugging.
+vec3 CalcF(in PbrMaterial pbr, in Microfacet micro) {
+    return FresnelSchlick(micro.v, micro.h, pbr.f0);
 }

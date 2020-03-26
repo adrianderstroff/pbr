@@ -4,6 +4,7 @@ import (
 	"image"
 	"os"
 
+	// import for side effects
 	gl "github.com/adrianderstroff/pbr/pkg/core/gl"
 )
 

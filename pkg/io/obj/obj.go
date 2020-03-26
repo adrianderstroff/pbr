@@ -2,7 +2,6 @@ package obj
 
 import (
 	"bufio"
-	"fmt"
 	"math"
 	"os"
 	"strconv"
@@ -41,10 +40,6 @@ func Load(filepath string, invert, smooth bool) (mesh.Mesh, error) {
 
 	// generate object from faces and vertex attributes
 	positions, uvs, normals := generateObject(faces, tpositions, tnormals, tuvs, smooth)
-
-	fmt.Printf("p: %v\n", len(positions))
-	fmt.Printf("t: %v\n", len(uvs))
-	fmt.Printf("n: %v\n", len(normals))
 
 	// calc center of gravity
 	positions = center(positions)

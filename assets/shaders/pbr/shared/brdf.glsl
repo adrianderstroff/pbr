@@ -1,9 +1,8 @@
-/**
- * trowbridge-reitz ggx normal distribution function approximates the relative 
- * surface area of microfacets, that are exactly aligned with the halfway 
- * vector h. The parameter a specifies the roughness of the surface.
- */
-float normal_distribution_ggx(vec3 n, vec3 h, float a) {
+// NormalDistributionGGX uses trowbridge-reitz ggx normal distribution function 
+// which approximates the relative surface area of microfacets, that are exactly 
+// aligned with the halfway vector h. The parameter a specifies the roughness of 
+// the surface. Typically a is simply roughness^2.
+float NormalDistributionGGX(vec3 n, vec3 h, float a) {
     float angle = max(dot(n, h), 0);
     float a2 = a * a;
     float d = (angle*angle) * (a2-1) + 1;
@@ -11,26 +10,30 @@ float normal_distribution_ggx(vec3 n, vec3 h, float a) {
     return a2 / (PI * d * d);
 }
 
-// schlick approximation of the smith equation
-float geometry_schlick_ggx(vec3 v, vec3 h, float k) {
-    float angle = max(dot(h, v), 0);
-    return angle / (angle * (1.0 - k) + k);
+// GeometrySchlickGGX is the schlick approximation of the smith equation. given 
+// the surface normal n and a vector v as well as the roughness parameter k, the 
+// function approximates how much light can travel in direction v. here k is 
+// (roughness+1)^2/8 when doing direct lighting.
+float GeometrySchlickGGX(vec3 v, vec3 n, float k) {
+    float nDotv = max(dot(n, v), 0);
+    return nDotv / (nDotv * (1.0 - k) + k);
 }
 
-/**
- * specifies the geometric shadowing of the microfacets based on the view vector 
- * and the roughness of the surface. here k depends on the roughness of the 
- * surface. this implementation uses the smith method.
- */
-float geometry_smith(vec3 l, vec3 v, vec3 h, float k) {
-    float ggx1 = geometry_schlick_ggx(l, h, k);
-    float ggx2 = geometry_schlick_ggx(v, h, k);
+// GeometrySmith specifies the geometric shadowing of the microfacets based on 
+// the view, light and surface normal as well as the roughness of the surface. 
+// here k is (roughness+1)^2/8 when doing direct lighting.
+float GeometrySmith(vec3 l, vec3 v, vec3 n, float k) {
+    float ggx1 = GeometrySchlickGGX(l, n, k);
+    float ggx2 = GeometrySchlickGGX(v, n, k);
 
     return ggx1 * ggx2;
 }
 
-// specifies the reflection of light on a smooth surface
-vec3 fresnel_schlick(vec3 l, vec3 h, vec3 f0) {
-    float ldoth = max(dot(l, h), 0);
-    return f0 + (vec3(1) - f0) * pow(1 - ldoth, 5);
+// FresnelSchlick specifies the reflection of light on a smooth surface. at a 
+// grazing angle all materials become perfect mirrors. f0 is the base 
+// reflectivity of the material, which is low for dielectrics (non-metals) and
+// usually high for metals. 
+vec3 FresnelSchlick(vec3 v, vec3 n, vec3 f0) {
+    float vdotn = max(dot(v, n), 0);
+    return f0 + (vec3(1) - f0) * pow(1 - vdotn, 5);
 }

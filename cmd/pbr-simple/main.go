@@ -45,7 +45,6 @@ func main() {
 	title := "PBR"
 	window, _ := window.New(title, int(WIDTH), int(HEIGHT))
 	window.LockFPS(60)
-	window.SetClearColor(0.1, 0.1, 0.1)
 	interaction := interaction.New(window)
 	interaction.AddInteractable(window)
 	defer window.Close()
@@ -61,6 +60,7 @@ func main() {
 	// make passes
 	pbrpass := MakePbrPass(WIDTH, HEIGHT, SHADER_PATH, TEX_PATH, OBJ_PATH)
 	sunpass := MakeSunPass(WIDTH, HEIGHT, SHADER_PATH)
+	//normalpass := MakeNormalPass(WIDTH, HEIGHT, SHADER_PATH)
 
 	// init state
 	state := State{
@@ -68,7 +68,8 @@ func main() {
 		roughness:      1.0,
 		metalness:      0.0,
 		lightpos:       mgl32.Vec3{10, 0, 10},
-		lightintensity: mgl32.Vec3{10, 10, 10},
+		lightintensity: mgl32.Vec3{100, 100, 100},
+		speed:          0.0003,
 		wireframe:      false,
 	}
 
@@ -89,22 +90,26 @@ func main() {
 		// update light pos
 		updatePos(t, &state.lightpos)
 
-		// execute render passes
+		// execute pbr pass
 		if state.wireframe {
 			gl.Wireframe()
 		}
 		pbrpass.SetState(state)
 		pbrpass.Render(&camera)
 
+		// execute sun path
 		sunpass.SetState(state)
 		sunpass.Render(&camera)
 		if state.wireframe {
 			gl.Fill()
 		}
 
+		// execute normal pass
+		//normalpass.Render(&camera)
+
 		// render GUI
 		gui.Begin()
-		if open := gui.BeginWindow("Options", 0, 0, 250, 425); open {
+		if open := gui.BeginWindow("Options", 0, 0, 250, 455); open {
 			if open := gui.BeginGroup("Material", 135); open {
 				gui.ColorPicker("albedo", &state.albedo)
 				gui.SliderFloat32("roughness", &state.roughness, 0, 1, 0.01)
@@ -112,9 +117,10 @@ func main() {
 				gui.EndGroup()
 			}
 
-			if open := gui.BeginGroup("Light", 170); open {
+			if open := gui.BeginGroup("Light", 200); open {
 				//gui.Slider3("pos", &state.lightpos, -20, 20, 1)
 				gui.Slider3("color", &state.lightintensity, 0, 100, 1)
+				gui.SliderFloat32("speed", &state.speed, 0, 0.001, 0.00001)
 				gui.EndGroup()
 			}
 
@@ -127,7 +133,7 @@ func main() {
 		gui.EndWindow()
 		gui.End()
 
-		t += 0.0003
+		t += state.speed
 	}
 	window.RunMainLoop(renderloop)
 }
@@ -142,6 +148,7 @@ type State struct {
 	// light
 	lightpos       mgl32.Vec3
 	lightintensity mgl32.Vec3
+	speed          float32
 
 	// debug
 	wireframe bool

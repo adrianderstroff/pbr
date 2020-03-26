@@ -32,40 +32,35 @@ layout (location = 5) out vec3 outF;
 //--------------------------------------------------------------------------//
 // includes                                                                 //
 //--------------------------------------------------------------------------//
-#include "../shared/util.glsl"
 #include "../shared/tonemapping.glsl"
 #include "../shared/normal.glsl"
 #include "pbr.glsl"
 
-vec3 LI() {
-    float dist = length(uLightPos - i.pos);
-    return uLightColor / (dist*dist);
-}
-
-vec3 brdf(in PbrMaterial pbr, in Microfacet micro) {
-    vec3 diffuseColor  = mix(diffuse(pbr), vec3(0), uMetallic);
-    vec3 specularColor = specular(pbr, micro);
-    return specularColor + diffuseColor;
-}
-
 void main(){
     // setup data structures
-    PbrMaterial pbr = makePbrMaterial();
-    Microfacet micro = makeMicroFacet(pbr, i.pos, i.normal);
+    PbrMaterial pbr = MakePbrMaterial();
+    Microfacet micro = MakeMicroFacet(pbr, i.pos, i.normal);
 
     // cosine angle
     float nDotL = max(dot(micro.l, micro.n), 0.0);
 
     // calculate resulting color
-    outColor = PI * brdf(pbr, micro) * nDotL * LI();
+    vec3 Lo = PI * Brdf(pbr, micro) * nDotL * Li(i.pos);
 
-    // write  resulting colors
-    outColor    = gamma(outColor);
+    // add some ambient lighting
+    float ao = 1;
+    vec3 ambient = vec3(0.03) * pbr.albedo * ao;
+    vec3 colorHDR = ambient + Lo;
+
+    // map HDR to LDR and then map the linear color range to gamma mapped color
+    // range.
+    vec3 colorLDR = ReinhardTonemapping(colorHDR);
+    outColor      = Gamma(colorLDR);
+
+    // calculate for debug purpose
     outDiffuse  = diffuse(pbr);
     outSpecular = specular(pbr, micro);
-    outD        = calcD(pbr, micro);
-    outG        = gamma(calcG(pbr, micro));
-    outF        = gamma(calcF(pbr, micro));
-
-    outColor = 0.5*(micro.h + vec3(1));
+    outD        = CalcD(pbr, micro);
+    outG        = CalcG(pbr, micro);
+    outF        = CalcF(pbr, micro);
 }

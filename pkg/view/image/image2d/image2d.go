@@ -2,7 +2,9 @@
 package image2d
 
 import (
+	"errors"
 	"fmt"
+	"image"
 	_ "image/jpeg" // used to decode jpeg
 	"image/png"
 	"os"
@@ -12,7 +14,9 @@ import (
 	gl "github.com/adrianderstroff/pbr/pkg/core/gl"
 
 	// import for side effects
-	_ "github.com/mdouchement/hdr/codec/rgbe"
+
+	"github.com/mdouchement/hdr"
+	"github.com/mdouchement/hdr/codec/rgbe"
 )
 
 // Image2D stores the dimensions, data format and it's pixel data.
@@ -43,17 +47,105 @@ func (img *Image2D) SaveToPath(path string) error {
 	ishdr := extension == ".hdr"
 
 	// extract image.Image from the Image2D
-	out, err := img.extractImage(ishdr)
-	if err != nil {
-		return err
+	// write data back into the golang image format
+	rect := image.Rect(0, 0, img.width, img.height)
+
+	if ishdr {
+		out := hdr.NewRGB(rect)
+
+		// make sure that byte depth is 4 bytes
+		if img.bytedepth != 4 {
+			return errors.New("hdr image has to have a byte depth of 4")
+		}
+
+		// make sure the image has 3 channels
+		if img.channels != 3 {
+			return errors.New("hdr image has to have 3 color channels")
+		}
+
+		// fill hdr image data
+		for y := 0; y < img.height; y++ {
+			for x := 0; x < img.width; x++ {
+				oidx := img.getOIdx(x, y)
+				idx := img.getIdx(x, y)
+
+				for c := 0; c < img.channels; c++ {
+					// turn bytes to float32
+					cidx := idx + c*img.bytedepth
+					bytes := make([]byte, img.bytedepth)
+					for d := 0; d < img.bytedepth; d++ {
+						bytes[d] = img.data[cidx+d]
+					}
+					val := bytesToFloat32(bytes)
+
+					out.Pix[oidx+c] = val
+				}
+			}
+		}
+
+		return rgbe.Encode(file, out)
 	}
 
-	// write image into file
-	if err := png.Encode(file, out); err != nil {
-		return err
+	switch img.channels {
+	case 1:
+		// fill image data
+		out := image.NewGray(rect)
+		for y := 0; y < img.height; y++ {
+			for x := 0; x < img.width; x++ {
+				idx := img.getIdx(x, y)
+				oidx := img.getOIdx(x, y)
+				out.Pix[oidx] = img.data[idx]
+			}
+		}
+		return png.Encode(file, out)
+	case 2:
+		// fill image data
+		out := image.NewRGBA(rect)
+		for y := 0; y < img.height; y++ {
+			for x := 0; x < img.width; x++ {
+				idxsrc := img.getIdx(x, y)
+				offsrc := img.bytedepth
+				idxdst := img.getOIdx(x, y)
+				out.Pix[idxdst] = img.data[idxsrc]
+				out.Pix[idxdst+1] = img.data[idxsrc+offsrc]
+				out.Pix[idxdst+2] = 0
+				out.Pix[idxdst+3] = 255
+			}
+		}
+		return png.Encode(file, out)
+	case 3:
+		// fill image data
+		out := image.NewRGBA(rect)
+		for y := 0; y < img.height; y++ {
+			for x := 0; x < img.width; x++ {
+				idxsrc := img.getIdx(x, y)
+				offsrc := img.bytedepth
+				idxdst := img.getOIdx(x, y)
+				out.Pix[idxdst] = img.data[idxsrc]
+				out.Pix[idxdst+1] = img.data[idxsrc+offsrc]
+				out.Pix[idxdst+2] = img.data[idxsrc+2*offsrc]
+				out.Pix[idxdst+3] = 255
+			}
+		}
+		return png.Encode(file, out)
+	case 4:
+		// fill image data
+		out := image.NewRGBA(rect)
+		for y := 0; y < img.height; y++ {
+			for x := 0; x < img.width; x++ {
+				idx := img.getIdx(x, y)
+				off := img.bytedepth
+				oidx := img.getOIdx(x, y)
+				out.Pix[oidx] = img.data[idx]
+				out.Pix[oidx+1] = img.data[idx+off]
+				out.Pix[oidx+2] = img.data[idx+2*off]
+				out.Pix[oidx+3] = img.data[idx+3*off]
+			}
+		}
+		return png.Encode(file, out)
 	}
 
-	return nil
+	return errors.New("invalid number of channels")
 }
 
 // FlipX changes the order of the columns by swapping the first column of a row

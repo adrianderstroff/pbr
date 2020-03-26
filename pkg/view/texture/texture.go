@@ -135,11 +135,6 @@ func (tex *Texture) DownloadCubeMapImages(format, pixeltype uint32) ([]image2d.I
 	bytesize := byteSizeFromPixelType(pixeltype)
 	channels := channelsFromFormat(format)
 
-	fmt.Printf("Texture Format (%v,%v) %vch %vbit\n", width, height,
-		channels, bytesize*8)
-
-	// initialize data only once
-
 	// download all sides of the cubemap
 	cubeMapImages := make([]image2d.Image2D, 6)
 	for i := 0; i < 6; i++ {
@@ -162,7 +157,7 @@ func (tex *Texture) DownloadCubeMapImages(format, pixeltype uint32) ([]image2d.I
 }
 
 func channelsFromFormat(format uint32) int {
-	var channels int = 3
+	var channels int = -1
 	switch format {
 	case gl.RED:
 		channels = 1
