@@ -23,6 +23,11 @@ vec3 Gamma(in vec3 color) {
 }
 
 // InvGamma performs a conversion from sRGB into linear space
+float InvGamma(in float val) {
+	return pow(val, 2.2);
+}
+
+// InvGamma performs a conversion from sRGB into linear space
 vec3 InvGamma(in vec3 color) {
 	return pow(color, vec3(2.2));
 }

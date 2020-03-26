@@ -13,8 +13,9 @@ import (
 
 const (
 	SHADER_PATH  = "./assets/shaders/"
-	TEX_PATH     = "./assets/images/textures/material1/"
+	TEX_PATH     = "./assets/images/textures/material-gun/"
 	CUBEMAP_PATH = "./assets/images/cubemap/hdr/"
+	MESH_PATH    = "./assets/objects/"
 	OUT_PATH     = "./"
 
 	WIDTH  int = 1200
@@ -45,7 +46,7 @@ func main() {
 
 	// make passes
 	cubemappass := MakeCubemapPass(SHADER_PATH, CUBEMAP_PATH)
-	pbrpass := MakePbrPass(WIDTH, HEIGHT, SHADER_PATH, TEX_PATH, &cubemappass.cubemap)
+	pbrpass := MakePbrPass(WIDTH, HEIGHT, MESH_PATH, SHADER_PATH, TEX_PATH, &cubemappass.cubemap)
 
 	// setup gui
 	gui := gui.New(window.Window)

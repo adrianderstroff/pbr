@@ -37,3 +37,12 @@ vec3 FresnelSchlick(vec3 v, vec3 n, vec3 f0) {
     float vdotn = max(dot(v, n), 0);
     return f0 + (vec3(1) - f0) * pow(1 - vdotn, 5);
 }
+
+// FresnelSchlick specifies the reflection of light on a smooth surface. at a 
+// grazing angle all materials become perfect mirrors. f0 is the base 
+// reflectivity of the material, which is low for dielectrics (non-metals) and
+// usually high for metals. 
+vec3 FresnelSchlick(vec3 v, vec3 n, vec3 f0, float roughness) {
+    float vdotn = max(dot(v, n), 0);
+    return f0 + (max(vec3(1 - roughness), f0) - f0) * pow(1 - vdotn, 5);
+}

@@ -33,7 +33,12 @@ layout(binding=6) uniform sampler2D   noiseTexture;
 //----------------------------------------------------------------------------//
 // output color                                                               //
 //----------------------------------------------------------------------------//
-out vec3 outColor;
+layout (location = 0) out vec3 outColor;
+layout (location = 1) out vec3 outAlbedo;
+layout (location = 2) out vec3 outNormal;
+layout (location = 3) out vec3 outMetallic;
+layout (location = 4) out vec3 outRoughness;
+layout (location = 5) out vec3 outAo;
 
 //----------------------------------------------------------------------------//
 // includes                                                                   //
@@ -45,23 +50,34 @@ void main(){
     // setup parameters
     PbrMaterial pbr   = MakePbrMaterial();
     Microfacet  micro = MakeMicroFacet(pbr, i.pos, i.normal);
-    Rand        rand  = MakeRand();
 
     // calculate for multiple samples
-    vec3 color = vec3(0);
+    vec3 Lo = vec3(0);
+    float dw = 1.0 / uSamples;
+    float weights = 0;
     for(int s = 0; s < uSamples; s++) {
-        // update random values
-        NextRand(rand, s);   
+        // sample direction
+        vec2 xi = HammersleySampling(s, uSamples);
+        micro.h = ImportanceSamplingGGX(xi, micro.n, pbr.a);
+        micro.l = reflect(-micro.v, micro.n);
+
+        // calculate angle
+        float nDotL = CosTheta(micro);
 
         // calculate resulting color
-        vec3 Lo = PI * Brdf(pbr, micro, rand) * CosTheta(micro) * Li(i.pos, micro.l);
-
-        // calculate resulting color
-        color += Lo;// * pbr.ao;
+        Lo += PI * Brdf2(pbr, micro) * nDotL * Li(i.pos, micro.l) * pbr.ao;
+        weights += nDotL;
     }
 
     // normalize and map color to LDR then apply gamma function
-    vec3 colorHDR = color / uSamples;
-    vec3 colorLDR = ReinhardTonemapping(colorHDR);
+    Lo = Lo / weights;
+    vec3 colorLDR = ReinhardTonemapping(Lo);
     outColor      = Gamma(colorLDR);
+
+    // debug
+    outAlbedo    = pbr.albedo;
+    outNormal    = 0.5 * (1 + micro.n);
+    outMetallic  = vec3(pbr.metallic);
+    outRoughness = vec3(pbr.roughness);
+    outAo        = vec3(pbr.ao);
 }

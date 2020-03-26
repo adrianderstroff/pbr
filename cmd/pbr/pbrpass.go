@@ -1,10 +1,13 @@
 package main
 
 import (
+	"errors"
+
+	"github.com/adrianderstroff/pbr/pkg/buffer/fbo"
 	"github.com/adrianderstroff/pbr/pkg/core/gl"
 	"github.com/adrianderstroff/pbr/pkg/core/shader"
+	"github.com/adrianderstroff/pbr/pkg/io/obj"
 	"github.com/adrianderstroff/pbr/pkg/scene/camera"
-	"github.com/adrianderstroff/pbr/pkg/view/mesh/sphere"
 	"github.com/adrianderstroff/pbr/pkg/view/texture"
 	"github.com/go-gl/mathgl/mgl32"
 )
@@ -13,6 +16,9 @@ import (
 type PbrPass struct {
 	texturedshader shader.Shader
 	cubemap        texture.Texture
+	// dimensions
+	width  int
+	height int
 	// uniform variables
 	wireframe bool
 	// pbr textures
@@ -25,17 +31,23 @@ type PbrPass struct {
 	time float32
 	// random
 	noisetexture texture.Texture
+	// deferred rendering
+	gbuffer fbo.FBO
 }
 
 // MakePbrPass creates a pbr pass
-func MakePbrPass(width, height int, shaderpath, texturepath string, cubemap *texture.Texture) PbrPass {
+func MakePbrPass(width, height int, meshpath, shaderpath, texturepath string, cubemap *texture.Texture) PbrPass {
 	// create shaders
-	sphere := sphere.Make(20, 25, 1, gl.TRIANGLES)
+	//sphere := sphere.Make(20, 25, 1, gl.TRIANGLES)
+	gun, err := obj.Load(meshpath+"gun.obj", false, false)
+	if err != nil {
+		panic(err)
+	}
 	texturedshader, err := shader.Make(shaderpath+"/pbr/ibl/main.vert", shaderpath+"/pbr/ibl/main.frag")
 	if err != nil {
 		panic(err)
 	}
-	texturedshader.AddRenderable(sphere)
+	texturedshader.AddRenderable(gun)
 
 	// load pbr material
 	albedotexture, err := texture.MakeFromPathFixedChannels(texturepath+"/albedo.png", 4, gl.RGBA, gl.RGBA)
@@ -62,33 +74,41 @@ func MakePbrPass(width, height int, shaderpath, texturepath string, cubemap *tex
 	if err != nil {
 		panic(err)
 	}
-	//aotexture.GenMipmap()
-
-	// random value array
-	noise := MakeNoise()
-	r := noise.MakeNoiseSlice(100)
-	r1 := noise.MakeNoiseSlice(100)
-	r2 := noise.MakeNoiseSlice(100)
+	aotexture.GenMipmap()
 
 	// update textured shader
 	texturedshader.Use()
-	texturedshader.UpdateFloat32Slice("uRandR", r)
-	texturedshader.UpdateFloat32Slice("uRandX", r1)
-	texturedshader.UpdateFloat32Slice("uRandY", r2)
 	texturedshader.UpdateFloat32("uGlobalRoughness", 0.1)
 	texturedshader.Release()
 
-	// random texture
-	noisetexture, err := noise.MakeNoiseTexture(2048, 2048)
-	if err != nil {
-		panic(err)
+	// setup g-buffer
+	gbuffer := fbo.MakeEmpty()
+	depthtex := texture.MakeDepth(width, height)
+	colortex := texture.MakeColor(width, height)
+	albedotex := texture.MakeColor(width, height)
+	normaltex := texture.MakeColor(width, height)
+	metallictex := texture.MakeColor(width, height)
+	roughnesstex := texture.MakeColor(width, height)
+	aotex := texture.MakeColor(width, height)
+	gbuffer.AttachDepthTexture(&depthtex)
+	gbuffer.AttachColorTexture(&colortex, 0)
+	gbuffer.AttachColorTexture(&albedotex, 1)
+	gbuffer.AttachColorTexture(&normaltex, 2)
+	gbuffer.AttachColorTexture(&metallictex, 3)
+	gbuffer.AttachColorTexture(&roughnesstex, 4)
+	gbuffer.AttachColorTexture(&aotex, 5)
+	if !gbuffer.IsComplete() {
+		panic(errors.New("gbuffer incomplete"))
 	}
-	noisetexture.SetMinMagFilter(gl.LINEAR, gl.LINEAR)
 
 	return PbrPass{
 		texturedshader: texturedshader,
 		cubemap:        *cubemap,
-		wireframe:      false,
+		// dimensions
+		width:  width,
+		height: height,
+		// debug
+		wireframe: false,
 		// pbr textures
 		albedotexture:    albedotexture,
 		normaltexture:    normaltexture,
@@ -96,8 +116,9 @@ func MakePbrPass(width, height int, shaderpath, texturepath string, cubemap *tex
 		roughnesstexture: roughnesstexture,
 		aotexture:        aotexture,
 		// random
-		time:         0,
-		noisetexture: noisetexture,
+		time: 0,
+		// deferred rendering
+		gbuffer: gbuffer,
 	}
 }
 
@@ -113,6 +134,23 @@ func (rmp *PbrPass) SetState(state *State) {
 
 // Render does the pbr pass
 func (rmp *PbrPass) Render(camera camera.Camera) {
+	rmp.gbuffer.Bind()
+	rmp.gbuffer.Clear()
+	rmp.RenderObj(camera)
+	rmp.gbuffer.Unbind()
+
+	w, h := int32(rmp.width), int32(rmp.height)
+	rmp.gbuffer.CopyColorToScreen(0, 0, 0, w, h)
+	rmp.gbuffer.CopyDepthToScreen(0, 0, w, h)
+	rmp.gbuffer.CopyColorToScreenRegion(1, 0, 0, w, h, 0, 0, w/5, h/5)
+	rmp.gbuffer.CopyColorToScreenRegion(2, 0, 0, w, h, w*1/5, 0, w/5, h/5)
+	rmp.gbuffer.CopyColorToScreenRegion(3, 0, 0, w, h, w*2/5, 0, w/5, h/5)
+	rmp.gbuffer.CopyColorToScreenRegion(4, 0, 0, w, h, w*3/5, 0, w/5, h/5)
+	rmp.gbuffer.CopyColorToScreenRegion(5, 0, 0, w, h, w*4/5, 0, w/5, h/5)
+}
+
+// RenderObj actually renders the object
+func (rmp *PbrPass) RenderObj(camera camera.Camera) {
 	if rmp.wireframe {
 		gl.PolygonMode(gl.FRONT_AND_BACK, gl.LINE)
 	} else {

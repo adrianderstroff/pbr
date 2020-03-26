@@ -76,15 +76,15 @@ func extract(filepath string, faces *[]Face, positions, normals, uvs *[]float32)
 		// or any higher polygon. only convex polygons are supported tho.
 		switch tokens[0] {
 		case "v":
-			for _, token := range tokens[1:] {
+			for _, token := range tokens[1:4] {
 				parseAdd(token, positions)
 			}
 		case "vn":
-			for _, token := range tokens[1:] {
+			for _, token := range tokens[1:4] {
 				parseAdd(token, normals)
 			}
 		case "vt":
-			for _, token := range tokens[1:] {
+			for _, token := range tokens[1:3] {
 				parseAdd(token, uvs)
 			}
 		case "f":

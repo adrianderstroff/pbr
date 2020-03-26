@@ -22,14 +22,6 @@ struct Microfacet {
     vec3  h;
 };
 
-struct Rand {
-    float r;
-    float r1;
-    float r2;
-    float kd;
-    float ks;
-};
-
 // MakePbrMaterial constructs the PBR Material object
 PbrMaterial MakePbrMaterial() {
     PbrMaterial pbr;
@@ -40,7 +32,7 @@ PbrMaterial MakePbrMaterial() {
     pbr.roughness = max(pbr.roughness, uGlobalRoughness);
     pbr.ao        = texture(aoTexture,          i.uv).x;
     pbr.f0        = mix(vec3(0.04), pbr.albedo, pbr.metallic);
-    pbr.a         = pbr.roughness * pbr.roughness;
+    pbr.a         = pbr.roughness;
     pbr.k         = (pbr.a * pbr.a) / 2.0;
     return pbr;
 }
@@ -53,30 +45,9 @@ Microfacet MakeMicroFacet(in PbrMaterial pbr, vec3 pos, vec3 normal) {
     return micro;
 }
 
-// NextRand returns the next set of random numbers for the s-th sample
-Rand MakeRand() {
-    Rand rand;
-    rand.r  = 0;
-    rand.r1 = 0;
-    rand.r2 = 0;
-    return rand;
-}
-
-// NextRand returns the next set of random numbers for the s-th sample
-void NextRand(inout Rand rand, in int s) {
-    vec4 rdir = texture(noiseTexture, i.uv);
-    rand.r  = fract(uRandR[s] + rdir.z);
-    rand.r1 = fract(uRandX[s] + rdir.x);
-    rand.r2 = fract(uRandY[s] + rdir.y);
-}
-
 // diffuse calculates the diffuse fraction of the surface.
-vec3 diffuse(in PbrMaterial pbr, in Microfacet micro, in Rand rand) {
-    // get pdf
-    float cosine = Saturate(dot(micro.n, micro.l));
-    float pdf = cosine / PI;
-
-    return pbr.albedo * pdf;
+vec3 diffuse(in PbrMaterial pbr, in Microfacet micro) {
+    return pbr.albedo / PI;
 }
 
 // specular calculates the specular fraction of the surface
@@ -110,23 +81,35 @@ float CosTheta(in Microfacet micro) {
 
 // Brdf calculates the Cook-Torrance BRDF for the given material and surface
 // properties.
-vec3 Brdf(in PbrMaterial pbr, inout Microfacet micro, in Rand rand) {
+// vec3 Brdf(in PbrMaterial pbr, inout Microfacet micro, in Rand rand) {
+//     // determine ks and kd
+//     vec3 Ks = FresnelSchlick(micro.v, micro.n, pbr.f0);
+//     vec3 Kd = (vec3(1) - Ks) * (1 - pbr.metallic);
+//     float rs = length(Ks);
+
+//     // determine the reflection depending on the specular properties
+//     vec3 color;
+//     if(rand.r <= rs) {
+//         // reflected ray
+//         micro.l = reflect(-micro.v, micro.n);
+//         color = specular(pbr, micro);
+//     } else {
+//         // samples the reflected ray using a cosine distribution.
+//         micro.l = RandomCosineDir(micro.n, rand.r1, rand.r2, pbr.a);
+//         color = Kd * diffuse(pbr, micro);
+//     }
+
+//     return color;
+// }
+
+vec3 Brdf2(in PbrMaterial pbr, inout Microfacet micro) {
     // determine ks and kd
-    vec3 Ks = FresnelSchlick(micro.v, micro.n, pbr.f0);
-    vec3 Kd = (vec3(1) - Ks) * (1 - pbr.metallic);
-    float rs = length(Ks);
+    vec3 Ks = FresnelSchlick(micro.v, micro.n, pbr.f0, pbr.roughness);
+    vec3 Kd = (vec3(1) - Ks) * (1-pbr.metallic);
 
-    // determine the reflection depending on the specular properties
-    vec3 color;
-    if(rand.r <= rs) {
-        // reflected ray
-        micro.l = reflect(-micro.v, micro.n);
-        color = specular(pbr, micro);
-    } else {
-        // samples the reflected ray using a cosine distribution.
-        micro.l = RandomCosineDir(micro.n, rand.r1, rand.r2, pbr.a);
-        color = Kd * diffuse(pbr, micro, rand);
-    }
+    // calculate diffuse and specular term
+    vec3 fs = specular(pbr, micro);
+    vec3 fd = diffuse(pbr, micro);
 
-    return color;
+    return Kd * fd + fs;
 }
