@@ -1,6 +1,6 @@
 # pbr
 
-Simple implementation of a PBR Renderer using opengl 4.3. This project aims to get an understanding of simple Cook-Torrance BRDFs. 
+Simple implementation of a PBR Renderer using opengl 4.3. This project aims to get an understanding of the Cook-Torrance BRDF. 
 
 ## Requirements
 This project requires a GPU with OpenGL 4.3+ support.
@@ -44,7 +44,7 @@ Now one possible model to render PBR is the **reflectance equation**:
 <img src="https://latex.codecogs.com/png.latex?L_0(\mathbf{v})&space;=&space;\int_\Omega&space;f(\mathbf{l},&space;\mathbf{v})&space;L_i(\mathbf{l})&space;(\mathbf{n}&space;\cdot&space;\mathbf{l})&space;d&space;\omega_i" title="L_0(\mathbf{v}) = \int_\Omega f(\mathbf{l}, \mathbf{v}) L_i(\mathbf{l}) (\mathbf{n} \cdot \mathbf{l}) d \omega_i" />
 </p>
 
-Here *L<sub>0</sub>* is the **radiance** of a small patch of the surface in direction of the viewer **v**. 
+Here *L<sub>0</sub>* is the sum of reflected **radiance** of a small patch of the surface in direction of the viewer **v**. 
 
 The Ω represents the **hemisphere** from where light can hit the surface patch. The hemisphere can be thought of as a unit half sphere and light coming from any point of that half sphere towards the surface patch. 
 
@@ -54,17 +54,46 @@ The dot product *(**n** ⋅ **l**)* describes how much of the light illuminates 
 
 Lastly the *dω<sub>i</sub>* describes a small patch on the hemisphere from where the light ray is coming.
 
-### Radiometric Terms
+### Radiometric Quantities
 
-- light energy
-- light flux
-- solid angle
-- radiance
-- irradiance
+The following information is taken from the [pbr-book](http://www.pbr-book.org/3ed-2018/Color_and_Radiometry/Radiometry.html), for more in-depth information check their website.
+
+PBR bases it's theory on radiometric quantities to describe the "brightness" of a light when interacting with different materials. As brightness is not a property that can be physically described radiance and irradiance are used instead. 
+
+Let's start with ***Light Energy*** first. A light source emits photons of different wavelength. Each wavelength *λ* has a specific energy *Q = hc / λ*, with *h* being Planck's constant and *c* the speed of light.
+
+Next based on the Light Energy, we are now interested how much energy is emited per time. This can be done by measuring how much energy passes through a region. This quantity is called the ***Light Flux*** *Φ* and is simply the Light Energy differentiated by time *t*, or in formula *Φ = dQ / dt*.
+
+If we now also take area that is illuminated by the light source we can calculate how much photons per time instance hit or path through this area *A*. This quantity is called ***Irradiance*** *E* and describes the density of the Light Flux. The irradiance is calculated as  *E = dΦ / dA* or *E = d<sup>2</sup> Q / (dt dA)*. The density of Light Flux leaving an area *A* is sometimes referred to as ***Radiant Exitance***.
+
+To define ***Radiance*** we first have to define the ***Solid Angle***. In 2D we can take an object and project it onto a unit circle by tracing two lines from the center of the circle to both "ends" of the shape. We then measure the arc length of the shapes projection which is the angle (in radians). If the whole circle is covered we have an angle of *2π*.
+The Solid Angle is an extension to a unit sphere. Now we project an object onto the surface of the unit sphere getting a specific area covering the sphere. The Solid angle is measured in steradians (sr). The full sphere has a Solid Angle of 4π while a hemisphere, which is a half sphere, has a Solid Angle of 2π. The Solid Angle can be represented by a vector with a direction and a magnitude that represents the area. 
+We will assume that we will observe an infinitisimally small area so the Solid Angle will simply be a normalized vector *ω* indicating a direction relative to the center of the unit sphere.
+
+With the concept we can describe ***Radiance*** as the Irradiance with respect to a solid angle *ω*. Thus the Radiance *L* can be calculated as *L = dE' / dω* or *L = d<sup>3</sup> Q / (dt dA' dω)*. It's important to note, that Radiance measures the Irradiance with respect to the area *A'* which is *A* projected on the plane *P*. The plane *P* is orthogonal to the Solid Angle *ω*, or in other words *ω* coincides with the normal of *P*.
 
 ### Cook-Torrance BRDF
 
-- diffuse term
+Most of this part is taken from [https://learnopengl.com/PBR/Theory](https://learnopengl.com/PBR/Theory). The focus of this and the following tutorials on the website focus on an approach that simplifies to evaluates the integral of the Reflectance Equation in a precomputation step to get decent fps.
+
+However the idea of this project is to have an implementation that helps understanding the Cook-Torrance BRDF and also is easy to translate into my raytracing project, where it won't be possible to evaluate the integral ahead of time. Thus all computations will be carried out as is while still trying to follow the theory of the *learnopengl* website. 
+
+#### The BRDF
+
+The Cook-Torrance BRDF consists of two terms, a diffuse Lambert term and a specular Cook-Torrance term *f(l,v) = k<sub>d</sub> f<sub>lambert</sub> + k<sub>s</sub> f<sub>cook-torrance</sub>*. The coefficients *k<sub>d</sub>* and *k<sub>s</sub>* have to add up to 1 to obey the law of conservation of energy. Here the coefficents are vectors, so they have to add up 1 componentwise.
+
+#### Diffuse Term
+
+The diffuse part is constant and describes ideal diffuse material that scatters light in all directions of the hemisphere evenly. Thus the diffuse part is *f<sub>lambert</sub> = c / π*. Here *c* is the color the surface or sometimes called the ***albedo***. 
+
+The division of *π* comes from the fact, that we have to adhere to the conservation of energy. A detailed explanation can be found in Rory's blogpost [http://www.rorydriscoll.com/2009/01/25/energy-conservation-in-games/](http://www.rorydriscoll.com/2009/01/25/energy-conservation-in-games/). 
+In short we want to make sure that the inequality 
+
+<p align="center">
+<img src="https://latex.codecogs.com/png.latex?\int_\Omega&space;\mathbf{c}_d&space;L_i&space;cos(\theta)&space;\delta&space;\omega&space;\le&space;L_i" title="\int_\Omega \mathbf{c}_d L_i cos(\theta) \delta \omega \le L_i" />
+</p>
+
+holds true. To make things easier, we only taking the diffuse part of the BRDF into account and also keeping the view vector *v* constant, we only integrate over the outgoing rays *l*. As *c<sub>d</sub>* and *L<sub>i</sub>* are constant in terms of the outgoing ray *l* they can be written in front of the integral. Then *L<sub>i</sub>* can be divided on both sides of the inequality. So nun we just need to integrate the cosine term over the hemisphere. Since its hard to integrate over the hemisphere we can instead integrate over the halfsphere in polar coordinates using two integrals with *φ = [0,2π]* and *θ = [0,π/2]*. After solving the integral we end up with *π c<sub>d</sub> <= 1*. The surface color *c* is defined in the range (0,0,0) to (1,1,1) thus we need to divide by *π* to fullfill the inequality and thus to obey the conservation of energy. 
 - specular term
 - normal distribution function *d()*
 - geometry function *g()*
@@ -75,6 +104,10 @@ Lastly the *dω<sub>i</sub>* describes a small patch on the hemisphere from wher
 ### Obj Models
 
 The models *bunny.obj* and *dragon.obj* are popular reconstructed models of scans taken from the [Stanford 3D Scanning repository](http://graphics.stanford.edu/data/3Dscanrep/).
+
+### Gun Model and Textures
+
+The gun.obj and textures in *assets/images/textures/material/gun* are the work of Andrew Maximum and are taken from [https://www.artstation.com/artwork/3k2](https://www.artstation.com/artwork/3k2).
 
 ## TODOs
 

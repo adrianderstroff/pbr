@@ -2,6 +2,7 @@ package obj
 
 import (
 	"bufio"
+	"fmt"
 	"math"
 	"os"
 	"strconv"
@@ -105,22 +106,27 @@ func extract(filepath string, faces *[]Face, positions, normals, uvs *[]float32)
 					idx, err := strconv.Atoi(ftoken)
 					if err == nil {
 						vertexattridxs[i] = idx
+					} else {
+						fmt.Println("error parse token " + ftoken)
 					}
 				}
 
 				// the vertex position has to be specified. if not skip this
 				// face vertex.
 				if vertexattridxs[0] == -1 {
+					fmt.Println("skip")
 					continue
 				}
 				// if vertex uv index is not specified then set it to be the
 				// same as the index of the vertex position.
 				if vertexattridxs[1] == -1 {
+					fmt.Println("copy pos to uv")
 					vertexattridxs[1] = vertexattridxs[0]
 				}
 				// if vertex normal index is not specified then set it to be the
 				// same as the index of the vertex position.
 				if vertexattridxs[2] == -1 {
+					fmt.Println("copy pos to normal")
 					vertexattridxs[2] = vertexattridxs[0]
 				}
 

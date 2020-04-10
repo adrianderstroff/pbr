@@ -1,6 +1,6 @@
 // cube dimensions
-const vec3 cubeMin = vec3(-50);
-const vec3 cubeMax = vec3(50);
+const vec3 cubeMin    = vec3(-50);
+const vec3 cubeMax    = vec3(50);
 const vec3 cubeCenter = vec3(0);
 
 // RayBoxIntersection calculates the intersection between a ray and an axis 

@@ -8,7 +8,7 @@ import (
 	"github.com/adrianderstroff/pbr/pkg/core/interaction"
 	"github.com/adrianderstroff/pbr/pkg/core/window"
 	"github.com/adrianderstroff/pbr/pkg/gui"
-	"github.com/adrianderstroff/pbr/pkg/scene/camera/trackball"
+	"github.com/adrianderstroff/pbr/pkg/scene/camera/trackballpan"
 )
 
 const (
@@ -41,8 +41,7 @@ func main() {
 	defer window.Close()
 
 	// make camera
-	camera := trackball.MakeDefault(WIDTH, HEIGHT, 2)
-	interaction.AddInteractable(&camera)
+	camera := trackballpan.MakeDefault(WIDTH, HEIGHT, 2)
 
 	// make passes
 	cubemappass := MakeCubemapPass(SHADER_PATH, CUBEMAP_PATH)
@@ -50,7 +49,10 @@ func main() {
 
 	// setup gui
 	gui := gui.New(window.Window)
+
+	// add interactables
 	interaction.AddInteractable(gui)
+	interaction.AddInteractable(&camera)
 
 	// init state
 	state := State{
@@ -71,16 +73,16 @@ func main() {
 		camera.Update()
 
 		// execute render passes
-		cubemappass.Render(&camera)
 		pbrpass.SetState(&state)
 		pbrpass.Render(&camera)
+		cubemappass.Render(&camera)
 
 		// render GUI
 		gui.Begin()
 		if open := gui.BeginWindow("Options", 0, 0, 250, 355); open {
 			if open := gui.BeginGroup("Material", 135); open {
 				gui.SliderFloat32("roughness", &state.roughness, 0, 1, 0.01)
-				gui.SliderInt32("samples", &state.samples, 1, 100, 1)
+				gui.SliderInt32("samples", &state.samples, 1, 500, 1)
 				gui.EndGroup()
 			}
 

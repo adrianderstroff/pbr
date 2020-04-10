@@ -29,8 +29,6 @@ type PbrPass struct {
 	aotexture        texture.Texture
 	// time
 	time float32
-	// random
-	noisetexture texture.Texture
 	// deferred rendering
 	gbuffer fbo.FBO
 }
@@ -54,26 +52,31 @@ func MakePbrPass(width, height int, meshpath, shaderpath, texturepath string, cu
 	if err != nil {
 		panic(err)
 	}
+	albedotexture.SetWrap2D(gl.REPEAT, gl.REPEAT)
 	albedotexture.GenMipmap()
 	normaltexture, err := texture.MakeFromPathFixedChannels(texturepath+"/normal.png", 4, gl.RGBA, gl.RGBA)
 	if err != nil {
 		panic(err)
 	}
+	normaltexture.SetWrap2D(gl.REPEAT, gl.REPEAT)
 	normaltexture.GenMipmap()
 	metallictexture, err := texture.MakeFromPathFixedChannels(texturepath+"/metallic.png", 4, gl.RGBA, gl.RGBA)
 	if err != nil {
 		panic(err)
 	}
+	metallictexture.SetWrap2D(gl.REPEAT, gl.REPEAT)
 	metallictexture.GenMipmap()
 	roughnesstexture, err := texture.MakeFromPathFixedChannels(texturepath+"/roughness.png", 4, gl.RGBA, gl.RGBA)
 	if err != nil {
 		panic(err)
 	}
+	roughnesstexture.SetWrap2D(gl.REPEAT, gl.REPEAT)
 	roughnesstexture.GenMipmap()
 	aotexture, err := texture.MakeFromPathFixedChannels(texturepath+"/ao.png", 4, gl.RGBA, gl.RGBA)
 	if err != nil {
 		panic(err)
 	}
+	aotexture.SetWrap2D(gl.REPEAT, gl.REPEAT)
 	aotexture.GenMipmap()
 
 	// update textured shader
@@ -143,10 +146,15 @@ func (rmp *PbrPass) Render(camera camera.Camera) {
 	rmp.gbuffer.CopyColorToScreen(0, 0, 0, w, h)
 	rmp.gbuffer.CopyDepthToScreen(0, 0, w, h)
 	rmp.gbuffer.CopyColorToScreenRegion(1, 0, 0, w, h, 0, 0, w/5, h/5)
+	rmp.gbuffer.CopyDepthToScreenRegion(0, 0, w, h, 0, 0, w/5, h/5)
 	rmp.gbuffer.CopyColorToScreenRegion(2, 0, 0, w, h, w*1/5, 0, w/5, h/5)
+	rmp.gbuffer.CopyDepthToScreenRegion(0, 0, w, h, w*1/5, 0, w/5, h/5)
 	rmp.gbuffer.CopyColorToScreenRegion(3, 0, 0, w, h, w*2/5, 0, w/5, h/5)
+	rmp.gbuffer.CopyDepthToScreenRegion(0, 0, w, h, w*2/5, 0, w/5, h/5)
 	rmp.gbuffer.CopyColorToScreenRegion(4, 0, 0, w, h, w*3/5, 0, w/5, h/5)
+	rmp.gbuffer.CopyDepthToScreenRegion(0, 0, w, h, w*3/5, 0, w/5, h/5)
 	rmp.gbuffer.CopyColorToScreenRegion(5, 0, 0, w, h, w*4/5, 0, w/5, h/5)
+	rmp.gbuffer.CopyDepthToScreenRegion(0, 0, w, h, w*4/5, 0, w/5, h/5)
 }
 
 // RenderObj actually renders the object
@@ -163,7 +171,6 @@ func (rmp *PbrPass) RenderObj(camera camera.Camera) {
 	rmp.metallictexture.Bind(3)
 	rmp.roughnesstexture.Bind(4)
 	rmp.aotexture.Bind(5)
-	rmp.noisetexture.Bind(6)
 
 	rmp.texturedshader.Use()
 	rmp.texturedshader.UpdateMat4("V", camera.GetView())
@@ -179,7 +186,6 @@ func (rmp *PbrPass) RenderObj(camera camera.Camera) {
 	rmp.metallictexture.Unbind()
 	rmp.roughnesstexture.Unbind()
 	rmp.aotexture.Unbind()
-	rmp.noisetexture.Unbind()
 
 	gl.PolygonMode(gl.FRONT_AND_BACK, gl.FILL)
 }
