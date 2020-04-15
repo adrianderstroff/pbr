@@ -30,3 +30,7 @@
 *.exe
 *.out
 *.app
+
+# R files
+.RData
+.Rhistory
