@@ -74,7 +74,7 @@ With the concept we can describe ***Radiance*** as the Irradiance with respect t
 
 ### Cook-Torrance BRDF
 
-Most of this part is taken from [https://learnopengl.com/PBR/Theory](https://learnopengl.com/PBR/Theory). The focus of this and the following tutorials on the website focus on an approach that simplifies to evaluates the integral of the Reflectance Equation in a precomputation step to get decent fps.
+Most of this part is taken from [https://learnopengl.com/PBR/Theory](https://learnopengl.com/PBR/Theory). This tutorial and the following ones on the website focus on an approach that simplifies to evaluates the integral of the Reflectance Equation in a precomputation step to get decent fps.
 
 However the idea of this project is to have an implementation that helps understanding the Cook-Torrance BRDF and also is easy to translate into my raytracing project, where it won't be possible to evaluate the integral ahead of time. Thus all computations will be carried out as is while still trying to follow the theory of the *learnopengl* website. 
 
@@ -94,10 +94,43 @@ In short we want to make sure that the inequality
 </p>
 
 holds true. To make things easier, we only taking the diffuse part of the BRDF into account and also keeping the view vector *v* constant, we only integrate over the outgoing rays *l*. As *c<sub>d</sub>* and *L<sub>i</sub>* are constant in terms of the outgoing ray *l* they can be written in front of the integral. Then *L<sub>i</sub>* can be divided on both sides of the inequality. So now we just need to integrate the cosine term over the hemisphere. Since its hard to integrate over the hemisphere we can instead integrate over the halfsphere in polar coordinates using two integrals with *φ = [0,2π]* and *θ = [0,π/2]*. After solving the integral we end up with *π c<sub>d</sub> <= 1*. The surface color *c* is defined in the range (0,0,0) to (1,1,1) thus we need to divide by *π* to fullfill the inequality and thus to obey the conservation of energy. 
-- specular term
-- normal distribution function *d()*
-- geometry function *g()*
-- fresnel reflection *f()*
+
+#### Specular Term
+
+The specular term is a bit more complicated. It consists of three functions ***D***, ***F***, ***G*** and a normalization factor as shown below:
+
+<p align="center">
+<img src="https://latex.codecogs.com/png.latex?\dpi{100}&space;\small&space;\frac{\mathbf{D}&space;\mathbf{F}&space;\mathbf{G}}{4&space;(\mathbf{l}&space;\cdot&space;\mathbf{n})(\mathbf{v}&space;\cdot&space;\mathbf{n})}" title="\small \frac{\mathbf{D} \mathbf{F} \mathbf{G}}{4 (\mathbf{l} \cdot \mathbf{n})(\mathbf{v} \cdot \mathbf{n})}" />
+</p>
+
+TODO: understand the normalization factor. Check the link http://www.pbr-book.org/3ed-2018/Reflection_Models/Microfacet_Models.html for potential explanation.
+
+In the Disney paper, they mention that the normalization comes from microfacet derivation (https://disney-animation.s3.amazonaws.com/library/s2012_pbs_disney_brdf_notes_v2.pdf).
+
+In the following all three functions are being discussed.
+
+##### Normal Distribution Function
+
+http://www.reedbeta.com/blog/hows-the-ndf-really-defined/
+
+| | | |
+|-|-|-|
+|<img src="https://github.com/adrianderstroff/pbr/blob/master/assets/images/github/D00.png?raw=true" title="Microfacet Model" />|<img src="https://github.com/adrianderstroff/pbr/blob/master/assets/images/github/D02.png?raw=true" title="Microfacet Model" />|<img src="https://github.com/adrianderstroff/pbr/blob/master/assets/images/github/D04.png?raw=true" title="Microfacet Model" />|
+|<img src="https://github.com/adrianderstroff/pbr/blob/master/assets/images/github/D06.png?raw=true" title="Microfacet Model" />|<img src="https://github.com/adrianderstroff/pbr/blob/master/assets/images/github/D08.png?raw=true" title="Microfacet Model" />|<img src="https://github.com/adrianderstroff/pbr/blob/master/assets/images/github/D10.png?raw=true" title="Microfacet Model" />|
+
+##### Geometry Function *G*
+
+| | | |
+|-|-|-|
+|<img src="https://github.com/adrianderstroff/pbr/blob/master/assets/images/github/G00.png?raw=true" title="Microfacet Model" />|<img src="https://github.com/adrianderstroff/pbr/blob/master/assets/images/github/G02.png?raw=true" title="Microfacet Model" />|<img src="https://github.com/adrianderstroff/pbr/blob/master/assets/images/github/G04.png?raw=true" title="Microfacet Model" />|
+|<img src="https://github.com/adrianderstroff/pbr/blob/master/assets/images/github/G06.png?raw=true" title="Microfacet Model" />|<img src="https://github.com/adrianderstroff/pbr/blob/master/assets/images/github/G08.png?raw=true" title="Microfacet Model" />|<img src="https://github.com/adrianderstroff/pbr/blob/master/assets/images/github/G10.png?raw=true" title="Microfacet Model" />|
+
+##### Fresnel Reflection *F*
+
+| | | |
+|-|-|-|
+|<img src="https://github.com/adrianderstroff/pbr/blob/master/assets/images/github/F00.png?raw=true" title="Microfacet Model" />|<img src="https://github.com/adrianderstroff/pbr/blob/master/assets/images/github/F02.png?raw=true" title="Microfacet Model" />|<img src="https://github.com/adrianderstroff/pbr/blob/master/assets/images/github/F04.png?raw=true" title="Microfacet Model" />|
+|<img src="https://github.com/adrianderstroff/pbr/blob/master/assets/images/github/F06.png?raw=true" title="Microfacet Model" />|<img src="https://github.com/adrianderstroff/pbr/blob/master/assets/images/github/F08.png?raw=true" title="Microfacet Model" />|<img src="https://github.com/adrianderstroff/pbr/blob/master/assets/images/github/F10.png?raw=true" title="Microfacet Model" />|
 
 ## Acknowledgement
 
