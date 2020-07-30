@@ -342,6 +342,7 @@ const (
 	RGB                              = ogl.RGB
 	RGB_INTEGER                      = ogl.RGB_INTEGER
 	RGB16F                           = ogl.RGB16F
+	RGB32F                           = ogl.RGB32F
 	BGR                              = ogl.BGR
 	BGR_INTEGER                      = ogl.BGR_INTEGER
 	RGBA                             = ogl.RGBA

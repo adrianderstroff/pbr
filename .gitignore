@@ -34,3 +34,6 @@
 # R files
 .RData
 .Rhistory
+
+# hdr images
+*.hdr

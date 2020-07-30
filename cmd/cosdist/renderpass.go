@@ -27,7 +27,7 @@ func MakeRenderPass(shaderpath string, raycount int) RenderPass {
 	flatshader.AddRenderable(sphere)
 
 	// make cube aabb
-	aabb := AABB{mgl32.Vec3{-50, -50, -50}, mgl32.Vec3{50, 50, 50}}
+	aabb := AABB{mgl32.Vec3{-25, -25, -25}, mgl32.Vec3{25, 25, 25}}
 
 	// create random numbers
 	noise := MakeNoise()
@@ -73,7 +73,7 @@ func MakeRenderPass(shaderpath string, raycount int) RenderPass {
 	}
 }
 
-// Render does the pbr pass
+// Render does the actual rendering
 func (rp *RenderPass) Render(camera camera.Camera) {
 	rp.flatshader.Use()
 	rp.flatshader.UpdateMat4("V", camera.GetView())

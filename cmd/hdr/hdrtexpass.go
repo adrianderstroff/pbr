@@ -40,7 +40,7 @@ func MakeHDRTexPass(width, height int, shaderpath, texturepath string) HDRTexPas
 	}
 }
 
-// Render does the pbr pass
+// Render does the texture render pass
 func (tmp *HDRTexPass) Render(camera camera.Camera) {
 	tmp.albedotexture.Bind(0)
 

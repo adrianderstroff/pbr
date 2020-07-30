@@ -1,3 +1,4 @@
+// texmappass is a demo program to test texture mapping on a sphere
 package main
 
 import (

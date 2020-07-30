@@ -95,3 +95,7 @@ func (tmp *TexMapPass) OnKeyPress(key, action, mods int) bool {
 
 	return false
 }
+
+func (tmp *TexMapPass) OnResize(width, height int) bool {
+	return false
+}

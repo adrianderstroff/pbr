@@ -49,10 +49,6 @@ func main() {
 	interaction.AddInteractable(window)
 	defer window.Close()
 
-	// setup gui
-	gui := gui.New(window.Window)
-	interaction.AddInteractable(gui)
-
 	// make camera
 	camera := trackball.MakeDefault(WIDTH, HEIGHT, 5)
 	interaction.AddInteractable(&camera)
@@ -61,6 +57,10 @@ func main() {
 	pbrpass := MakePbrPass(WIDTH, HEIGHT, SHADER_PATH, TEX_PATH, OBJ_PATH)
 	sunpass := MakeSunPass(WIDTH, HEIGHT, SHADER_PATH)
 	//normalpass := MakeNormalPass(WIDTH, HEIGHT, SHADER_PATH)
+
+	// setup gui
+	gui := gui.New(window.Window)
+	interaction.AddInteractable(gui)
 
 	// init state
 	state := State{

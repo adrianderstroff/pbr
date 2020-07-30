@@ -1,3 +1,5 @@
+// gencubemap is a utility program to turn an equirectangular texture into a set
+// of six cube map textures.
 package main
 
 import (
@@ -11,11 +13,12 @@ import (
 
 const (
 	SHADER_PATH = "./assets/shaders/"
-	IN_PATH     = "./assets/images/textures/hdr/"
-	OUT_PATH    = "./assets/images/cubemap/hdr/"
+	IN_PATH     = "./assets/images/textures/hdr/the_sky_is_on_fire_16k.hdr"
+	OUT_PATH    = "./assets/images/cubemap/sky/"
 
-	WIDTH  int = 800
-	HEIGHT int = 600
+	WIDTH       int = 800
+	HEIGHT      int = 600
+	TEXTURE_RES int = 2048 // has to be power of 2
 )
 
 func main() {
@@ -35,7 +38,7 @@ func main() {
 	interaction.AddInteractable(&camera)
 
 	// make passes
-	genpass := MakeGenPass(SHADER_PATH, IN_PATH)
+	genpass := MakeGenPass(SHADER_PATH, IN_PATH, TEXTURE_RES)
 	genpass.Render()
 	cubemap := genpass.GetCubeMap()
 	cubemappass := MakeCubemapPass(SHADER_PATH, cubemap)

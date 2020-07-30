@@ -41,7 +41,8 @@ func MakeEmptyCubeMap(dim int, internalformat int32, format, pixelType uint32) (
 // MakeCubeMap creates a cube map with the images specfied from the path.
 // For usage with skyboxes where textures are on the inside of the cube, set the
 // inside parameter to true to flip all textures horizontally, otherwise set
-// this parameter to false. If the images are not quadratic and a power of two,
+// this parameter to false. The internal format describes the format of the
+// texture on the gpu. If the images are not quadratic and a power of two,
 // they will automatically be subsampled to fit the required size.
 func MakeCubeMap(right, left, top, bottom, front, back string, inside bool,
 	internalformat int32) (Texture, error) {

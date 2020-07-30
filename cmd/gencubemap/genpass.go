@@ -16,10 +16,11 @@ type GenPass struct {
 	equirecttex  texture.Texture
 	emptyCubemap texture.Texture
 	framebuffer  fbo.FBO
+	resolution   int
 }
 
 // MakeGenPass creates a rendering pass
-func MakeGenPass(shaderpath, texturepath string) GenPass {
+func MakeGenPass(shaderpath, texturepath string, resolution int) GenPass {
 	// create shaders
 	cube := cube.Make(1, 1, 1, true, gl.TRIANGLES)
 	texturingshader, err := shader.Make(shaderpath+"/gencubemap/main.vert", shaderpath+"/gencubemap/main.frag")
@@ -29,31 +30,29 @@ func MakeGenPass(shaderpath, texturepath string) GenPass {
 	texturingshader.AddRenderable(cube)
 
 	// load hdr texture
-	equirecttex, err := texture.MakeFromPath(texturepath+"501-free-hdri-skies-com.hdr", gl.RGB, gl.RGB)
+	equirecttex, err := texture.MakeFromPath(texturepath, gl.RGB, gl.RGB)
 	if err != nil {
 		panic(err)
 	}
 
 	// create framebuffer
-	depthTexture := texture.MakeDepth(512, 512)
+	depthTexture := texture.MakeDepth(resolution, resolution)
 	framebuffer := fbo.MakeEmpty()
 	framebuffer.AttachDepthTexture(&depthTexture)
 	framebuffer.Bind()
-	//captureFBOHandle := createFrameBufferObject()
 
 	// load cubemap texture
-	emptyCubemap, err := texture.MakeEmptyCubeMap(512, gl.RGB16F, gl.RGB, gl.FLOAT)
+	emptyCubemap, err := texture.MakeEmptyCubeMap(resolution, gl.RGB32F, gl.RGB, gl.FLOAT)
 	if err != nil {
 		panic(err)
 	}
-
-	//framebuffer.Unbind()
 
 	return GenPass{
 		shader:       texturingshader,
 		equirecttex:  equirecttex,
 		emptyCubemap: emptyCubemap,
 		framebuffer:  framebuffer,
+		resolution:   resolution,
 	}
 }
 
@@ -76,7 +75,7 @@ func (tmp *GenPass) Render() {
 	tmp.shader.Use()
 	tmp.equirecttex.Bind(0)
 
-	gl.Viewport(0, 0, 512, 512)
+	gl.Viewport(0, 0, int32(tmp.resolution), int32(tmp.resolution))
 	tmp.framebuffer.Bind()
 
 	// render to all sides of the cube map

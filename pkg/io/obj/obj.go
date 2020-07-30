@@ -35,6 +35,12 @@ func Load(filepath string, invert, smooth bool) (mesh.Mesh, error) {
 		return mesh.Mesh{}, err
 	}
 
+	fmt.Println("#Faces     " + fmt.Sprint(len(faces)))
+	fmt.Println("#Vertices  " + fmt.Sprint(len(tpositions)/3))
+	fmt.Println("#Positions " + fmt.Sprint(len(tpositions)))
+	fmt.Println("#Normals   " + fmt.Sprint(len(tnormals)))
+	fmt.Println("#UVs       " + fmt.Sprint(len(tuvs)))
+
 	// break down faces consisting of polygons with more than 3 vertices into
 	// a set of triangles
 	sanitizeFaces(&faces)
@@ -67,8 +73,16 @@ func extract(filepath string, faces *[]Face, positions, normals, uvs *[]float32)
 	// read the file line by line
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
+		// trim whitespaces at start and end
+		line := scanner.Text()
+		line = strings.TrimSpace(line)
+		if len(line) == 0 {
+			continue
+		}
+
 		// tokens are separated by whitespace
-		tokens := strings.Split(scanner.Text(), " ")
+		tokens := strings.Split(line, " ")
+		tokens = filter(tokens, func(s string) bool { return len(s) > 0 })
 
 		// depending on the type of the vertex attribute parse token to float
 		// and add it to the according slice. the face attribute f is a bit
@@ -92,7 +106,6 @@ func extract(filepath string, faces *[]Face, positions, normals, uvs *[]float32)
 			face := Face{}
 			// iterate over vertices
 			for _, token := range tokens[1:] {
-
 				// vertex attribute indices
 				vertexattridxs := []int{-1, -1, -1}
 
@@ -102,31 +115,35 @@ func extract(filepath string, faces *[]Face, positions, normals, uvs *[]float32)
 				// and normal. the first index must be defined. the other two
 				// indices are optional.
 				ftokens := strings.Split(token, "/")
+				if len(ftokens[0]) == 0 && len(ftokens) == 1 {
+					fmt.Println("set token to " + token)
+					ftokens[0] = token
+				}
 				for i, ftoken := range ftokens {
 					idx, err := strconv.Atoi(ftoken)
 					if err == nil {
 						vertexattridxs[i] = idx
 					} else {
-						fmt.Println("error parse token " + ftoken)
+						fmt.Println("error parse token " + fmt.Sprint(i) + " '" + ftoken + "'")
 					}
 				}
 
 				// the vertex position has to be specified. if not skip this
 				// face vertex.
 				if vertexattridxs[0] == -1 {
-					fmt.Println("skip")
+					//fmt.Println("skip")
 					continue
 				}
 				// if vertex uv index is not specified then set it to be the
 				// same as the index of the vertex position.
 				if vertexattridxs[1] == -1 {
-					fmt.Println("copy pos to uv")
+					//fmt.Println("copy pos to uv")
 					vertexattridxs[1] = vertexattridxs[0]
 				}
 				// if vertex normal index is not specified then set it to be the
 				// same as the index of the vertex position.
 				if vertexattridxs[2] == -1 {
-					fmt.Println("copy pos to normal")
+					//fmt.Println("copy pos to normal")
 					vertexattridxs[2] = vertexattridxs[0]
 				}
 
@@ -237,6 +254,8 @@ func parseAdd(token string, slice *[]float32) {
 	v, err := strconv.ParseFloat(token, 32)
 	if err == nil {
 		*slice = append(*slice, float32(v))
+	} else {
+		fmt.Println("Error parsing float " + token)
 	}
 }
 
@@ -251,7 +270,8 @@ func extractVertexAttribute(outSlice *[]float32, inSlice []float32, indices []in
 	for i := 0; i < 3; i++ {
 		idx := idxs[i]
 		for o := 0; o < offset; o++ {
-			*outSlice = append(*outSlice, inSlice[idx*offset+o])
+			inidx := idx*offset + o
+			*outSlice = append(*outSlice, inSlice[inidx])
 		}
 	}
 }
@@ -364,4 +384,13 @@ func createMesh(positions, uvs, normals []float32) mesh.Mesh {
 	// create the mesh
 	geometry := mesh.MakeGeometry(layout, data)
 	return mesh.Make(geometry, nil, gl.TRIANGLES)
+}
+
+func filter(ss []string, test func(string) bool) (ret []string) {
+	for _, s := range ss {
+		if test(s) {
+			ret = append(ret, s)
+		}
+	}
+	return
 }

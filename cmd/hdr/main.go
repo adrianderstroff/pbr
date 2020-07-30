@@ -1,3 +1,4 @@
+// hdr is a test program to load hdr images
 package main
 
 import (

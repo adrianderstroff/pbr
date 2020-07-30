@@ -34,7 +34,7 @@ func MakeCubemapPass(shaderpath, cubemappath string) CubemapPass {
 		front  = cubemappath + "front.jpg"
 		back   = cubemappath + "back.jpg"
 	)
-	cubemap, err := texture.MakeCubeMap(right, left, top, bottom, front, back, false)
+	cubemap, err := texture.MakeCubeMap(right, left, top, bottom, front, back, false, gl.RGB)
 	if err != nil {
 		panic(err)
 	}

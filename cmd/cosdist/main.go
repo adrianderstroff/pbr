@@ -1,3 +1,5 @@
+// cosdist is a demo program to test the calculation of the cosine distribution
+// calculation as well as the intersection of the ray with the cubemap
 package main
 
 import (
@@ -37,7 +39,7 @@ func main() {
 
 	// make passes
 	cubemappass := MakeCubemapPass(SHADER_PATH, CUBEMAP_PATH)
-	renderpass := MakeRenderPass(SHADER_PATH, 10)
+	renderpass := MakeRenderPass(SHADER_PATH, 50)
 
 	// render loop
 	renderloop := func() {
