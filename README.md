@@ -113,12 +113,18 @@ In the following all three functions are being discussed.
 
 http://www.reedbeta.com/blog/hows-the-ndf-really-defined/
 
+<p align="center">
+<img src="https://github.com/adrianderstroff/pbr/blob/master/assets/images/github/ndf-images.png?raw=true" title="Normal Distribution Function - roughness variation" />
+</p>
+
 | | | |
 |-|-|-|
 |<img src="https://github.com/adrianderstroff/pbr/blob/master/assets/images/github/D00.png?raw=true" title="Microfacet Model" />|<img src="https://github.com/adrianderstroff/pbr/blob/master/assets/images/github/D02.png?raw=true" title="Microfacet Model" />|<img src="https://github.com/adrianderstroff/pbr/blob/master/assets/images/github/D04.png?raw=true" title="Microfacet Model" />|
 |<img src="https://github.com/adrianderstroff/pbr/blob/master/assets/images/github/D06.png?raw=true" title="Microfacet Model" />|<img src="https://github.com/adrianderstroff/pbr/blob/master/assets/images/github/D08.png?raw=true" title="Microfacet Model" />|<img src="https://github.com/adrianderstroff/pbr/blob/master/assets/images/github/D10.png?raw=true" title="Microfacet Model" />|
 
 ##### Geometry Function *G*
+
+test http://www.codinglabs.net/article_physically_based_rendering_cook_torrance.aspx
 
 | | | |
 |-|-|-|
