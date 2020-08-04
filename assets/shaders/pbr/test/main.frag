@@ -34,6 +34,7 @@ layout (location = 5) out vec3 outF;
 //--------------------------------------------------------------------------//
 
 #define PI 3.1415926535897932384626433832795
+#define EPS 0.001
 
 //--------------------------------------------------------------------------//
 // util functions                                                           //
@@ -99,7 +100,7 @@ vec3 InvGamma(in vec3 color) {
 vec3 NormalMapping(in vec3 surfaceNormal, in vec3 relativeNormal) {
     // calculate tangent and binormal
 	vec3 n = normalize(surfaceNormal);
-	vec3 t = (dot(n, vec3(0,1,0)) == 0) ? vec3(1, 0, 0) : vec3(0, 1, 0);
+	vec3 t = (dot(n, vec3(0,1,0)) < EPS) ? vec3(1, 0, 0) : vec3(0, 1, 0);         // MODIFIED THE CHECK
 	vec3 b = cross(t, n);
 	t = cross(n, b);
 
@@ -257,7 +258,7 @@ vec3 CalcG(in PbrMaterial pbr, in Microfacet micro) {
 }
 // CalcF calculates the surface reflectance for debugging.
 vec3 CalcF(in PbrMaterial pbr, in Microfacet micro) {
-    return FresnelSchlick(micro.v, micro.h, pbr.f0);
+    return FresnelSchlick(micro.v, micro.n, pbr.f0);                             // replaced h with n
 }
 
 //--------------------------------------------------------------------------//
@@ -265,9 +266,12 @@ vec3 CalcF(in PbrMaterial pbr, in Microfacet micro) {
 //--------------------------------------------------------------------------//
 
 void main(){
+    // renormalize normal after rasterization
+    vec3 n = normalize(i.normal);                                                // added to fix grid artifacts
+
     // setup data structures
     PbrMaterial pbr = MakePbrMaterial();
-    Microfacet micro = MakeMicroFacet(pbr, i.pos, i.normal);
+    Microfacet micro = MakeMicroFacet(pbr, i.pos, n);
 
     // cosine angle
     float nDotL = max(dot(micro.l, micro.n), 0.0);

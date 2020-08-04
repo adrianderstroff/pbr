@@ -4,10 +4,9 @@ import (
 	"errors"
 
 	"github.com/adrianderstroff/pbr/pkg/buffer/fbo"
-	"github.com/adrianderstroff/pbr/pkg/core/gl"
 	"github.com/adrianderstroff/pbr/pkg/core/shader"
+	"github.com/adrianderstroff/pbr/pkg/io/obj"
 	"github.com/adrianderstroff/pbr/pkg/scene/camera"
-	"github.com/adrianderstroff/pbr/pkg/view/mesh/sphere"
 	"github.com/adrianderstroff/pbr/pkg/view/texture"
 	"github.com/go-gl/mathgl/mgl32"
 )
@@ -41,7 +40,11 @@ type PbrPass struct {
 // MakePbrPass creates a pbr pass
 func MakePbrPass(width, height int, shaderpath, texturepath, objpath string) PbrPass {
 	// create shaders
-	sphere := sphere.Make(80, 80, 1, gl.TRIANGLES)
+	//sphere := sphere.Make(20, 20, 1, gl.TRIANGLES)
+	sphere, err := obj.Load(objpath+"dragon.obj", true, true)
+	if err != nil {
+		panic(err)
+	}
 
 	// set up pbr shader
 	pbrshader, err := shader.Make(shaderpath+"/pbr/test/main.vert", shaderpath+"/pbr/test/main.frag")

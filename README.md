@@ -111,6 +111,8 @@ In the following all three functions are being discussed.
 
 ##### Normal Distribution Function
 
+The normal distribution function statistically approximates the distribution of microfacet normals with respect to the surface normal depending on the surface's roughness *α*. For a completely rough surface (*α = 1.0*) the microfacet normals are completely randomly displaced in all directions making the surface completely diffuse. On the other hand, a completetly smooth surface (*α = 0.0*) has all microfacet normals aligned to the surface normal, making it a perfect mirror. A property of the normal distribution function is that all function values have to add up to 1.
+
 http://www.reedbeta.com/blog/hows-the-ndf-really-defined/
 
 <p align="center">

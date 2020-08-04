@@ -75,6 +75,7 @@ func main() {
 		angle:          62.0,
 		wireframe:      false,
 		normal:         false,
+		bgcolor:        mgl32.Vec4{0.6, 0.6, 0.6, 1.0},
 	}
 
 	// render loop
@@ -114,8 +115,9 @@ func main() {
 		// render GUI
 		gui.Begin()
 		if open := gui.BeginWindow("Options", 0, 0, 250, 615); open {
-			if open := gui.BeginGroup("Render", 80); open {
+			if open := gui.BeginGroup("Render", 100); open {
 				gui.Selector("display", images, &state.imageidx)
+				gui.ColorPicker("background", &state.bgcolor)
 				gui.EndGroup()
 			}
 
@@ -132,7 +134,7 @@ func main() {
 				gui.EndGroup()
 			}
 
-			if open := gui.BeginGroup("Debug", 160); open {
+			if open := gui.BeginGroup("Debug", 140); open {
 				gui.Checkbox("Wireframe", &state.wireframe)
 				gui.Checkbox("Render Normals", &state.normal)
 				gui.EndGroup()
@@ -140,6 +142,9 @@ func main() {
 		}
 		gui.EndWindow()
 		gui.End()
+
+		// set background color
+		gl.ClearColor(state.bgcolor.X(), state.bgcolor.Y(), state.bgcolor.Z(), state.bgcolor.W())
 	}
 	window.RunMainLoop(renderloop)
 }
@@ -162,4 +167,5 @@ type State struct {
 	// debug
 	wireframe bool
 	normal    bool
+	bgcolor   mgl32.Vec4
 }
