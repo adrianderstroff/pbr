@@ -113,7 +113,7 @@ In the following all three functions are being discussed.
 
 The normal distribution function statistically approximates the distribution of microfacet normals with respect to the surface normal depending on the surface's roughness *α*. For a completely rough surface (*α = 1.0*) the microfacet normals are completely randomly displaced in all directions making the surface completely diffuse. On the other hand, a completetly smooth surface (*α = 0.0*) has all microfacet normals aligned to the surface normal, making it a perfect mirror. A property of the normal distribution function is that all function values have to add up to 1, since there cannot be more light reflected than received.
 
-The used normal distribution function is called the Trowbridge-Reitz GGX. It takes the normal **n** of the surface, the halfway vector **h** that is calculated as **h**=(**l**+**v**)/||(**l**+**v**)||, so the vector between the normalized direction to the light **l** and the normalized direction to the viewer **v**. The parameter *α* describes the roughness of the surface, with *α=0* being completely smooth and *α=1* being completely rough.
+The used normal distribution function is called the ***Trowbridge-Reitz GGX***. It takes the normal **n** of the surface, the halfway vector **h** that is calculated as **h**=(**l**+**v**)/||(**l**+**v**)||, so the vector between the normalized direction to the light **l** and the normalized direction to the viewer **v**. The parameter *α* describes the roughness of the surface, with *α=0* being completely smooth and *α=1* being completely rough.
 
 <p align="center">
 <img src="assets/images/github/eq-ndf.png?raw=true" title="Normal Distribution Function" />
@@ -159,7 +159,3 @@ The models *bunny.obj* and *dragon.obj* are popular reconstructed models of scan
 ### Gun Model and Textures
 
 The gun.obj and textures in *assets/images/textures/material/gun* are the work of Andrew Maximum and are taken from [https://www.artstation.com/artwork/3k2](https://www.artstation.com/artwork/3k2).
-
-## TODOs
-
-- Make Shader Error Message more readable
