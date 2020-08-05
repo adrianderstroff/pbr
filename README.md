@@ -93,7 +93,7 @@ In short we want to make sure that the inequality
 <img src="https://github.com/adrianderstroff/pbr/blob/master/assets/images/github/eq-energyconservation.png?raw=true" title="Energy Conservation" />
 </p>
 
-holds true. To make things easier, we only taking the diffuse part of the BRDF into account and also keeping the view vector *v* constant, we only integrate over the outgoing rays *l*. As *c<sub>d</sub>* and *L<sub>i</sub>* are constant in terms of the outgoing ray *l* they can be written in front of the integral. Then *L<sub>i</sub>* can be divided on both sides of the inequality. So now we just need to integrate the cosine term over the hemisphere. Since its hard to integrate over the hemisphere we can instead integrate over the halfsphere in polar coordinates using two integrals with *φ = [0,2π]* and *θ = [0,π/2]*. After solving the integral we end up with *π c<sub>d</sub> <= 1*. The surface color *c* is defined in the range (0,0,0) to (1,1,1) thus we need to divide by *π* to fullfill the inequality and thus to obey the conservation of energy. 
+holds true. To make things easier, we are only taking the diffuse part of the BRDF into account and also keeping the view vector *v* constant, we only integrate over the outgoing rays *l*. As *c<sub>d</sub>* and *L<sub>i</sub>* are constant in terms of the outgoing ray *l* they can be written in front of the integral. Then *L<sub>i</sub>* can be divided on both sides of the inequality. So now we just need to integrate the cosine term over the hemisphere. Since its hard to integrate over the hemisphere we can instead integrate over the halfsphere in polar coordinates using two integrals with *φ = [0,2π]* and *θ = [0,π/2]*. After solving the integral we end up with *π c<sub>d</sub> <= 1*. The surface color *c* is defined in the range (0,0,0) to (1,1,1) thus we need to divide by *π* to fullfill the inequality and thus to obey the conservation of energy. 
 
 #### Specular Term
 
@@ -112,6 +112,16 @@ In the following all three functions are being discussed.
 ##### Normal Distribution Function
 
 The normal distribution function statistically approximates the distribution of microfacet normals with respect to the surface normal depending on the surface's roughness *α*. For a completely rough surface (*α = 1.0*) the microfacet normals are completely randomly displaced in all directions making the surface completely diffuse. On the other hand, a completetly smooth surface (*α = 0.0*) has all microfacet normals aligned to the surface normal, making it a perfect mirror. A property of the normal distribution function is that all function values have to add up to 1, since there cannot be more light reflected than received.
+
+The used normal distribution function is called the Trowbridge-Reitz GGX. It takes the normal **n** of the surface, the halfway vector **h** that is calculated as **h**=(**l**+**v**)/||(**l**+**v**)||, so the vector between the normalized direction to the light **l** and the normalized direction to the viewer **v**. The parameter *α* describes the roughness of the surface, with *α=0* being completely smooth and *α=1* being completely rough.
+
+<p align="center">
+<img src="https://github.com/adrianderstroff/pbr/blob/master/assets/images/github/eq-ndf.png?raw=true" title="Normal Distribution Function" />
+</p>
+
+Below are results of the simple pbr model, that uses a direct light source and the same parameters for the whole mesh. Only the roughness was varied while the other parameters were kept static. For smaller values of *α* the surface shows a small highlight while the rest of the surface is black. This is because the microfacets are more aligned towards the surface normal behaving more like a mirror. 
+
+Higher values of *α* however are randomly distributed with respect to the surface normal thus the light is reflected in all directions. Because the light is reflected in different directions, the overall luminance is lower compared to a smoother surface resulting in the grayish surface. For *α=1* the light is evenly scattered in all directions resulting in a perfect diffuse color.
 
 http://www.reedbeta.com/blog/hows-the-ndf-really-defined/
 
