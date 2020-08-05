@@ -142,6 +142,7 @@ func (rmp *PbrPass) Render(camera camera.Camera) {
 	rmp.RenderObj(camera)
 	rmp.gbuffer.Unbind()
 
+	// copy gbuffer textures to the screen
 	w, h := int32(rmp.width), int32(rmp.height)
 	rmp.gbuffer.CopyColorToScreen(0, 0, 0, w, h)
 	rmp.gbuffer.CopyDepthToScreen(0, 0, w, h)

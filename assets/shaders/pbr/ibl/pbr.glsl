@@ -40,7 +40,7 @@ PbrMaterial MakePbrMaterial() {
 // MakeMicroFacet constructs the micro facet object
 Microfacet MakeMicroFacet(in PbrMaterial pbr, vec3 pos, vec3 normal) {
     Microfacet micro;
-    micro.n = NormalMapping(normal, pbr.normal);
+    micro.n = NormalMapping(normalize(normal), pbr.normal);
     micro.v = normalize(uCameraPos - pos);
     return micro;
 }
@@ -60,7 +60,7 @@ vec3 specular(in PbrMaterial pbr, in Microfacet micro) {
     // calculate brdf
     float d = NormalDistributionGGX(n, h, pbr.a);
     float g = GeometrySmith(l, v, n, pbr.k);
-    vec3  f = FresnelSchlick(v, h, pbr.f0, pbr.roughness);
+    vec3  f = FresnelSchlick(v, n, pbr.f0, pbr.roughness);
 
     // calculate normalization
     float ndotl = max(dot(n, l), 0);

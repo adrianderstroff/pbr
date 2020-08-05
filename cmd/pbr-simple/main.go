@@ -51,7 +51,6 @@ func main() {
 
 	// make camera
 	camera := trackball.MakeDefault(WIDTH, HEIGHT, 5)
-	interaction.AddInteractable(&camera)
 
 	// make passes
 	pbrpass := MakePbrPass(WIDTH, HEIGHT, SHADER_PATH, TEX_PATH, OBJ_PATH)
@@ -60,7 +59,10 @@ func main() {
 
 	// setup gui
 	gui := gui.New(window.Window)
+
+	// add interactables in the right order
 	interaction.AddInteractable(gui)
+	interaction.AddInteractable(&camera)
 
 	// init state
 	state := State{

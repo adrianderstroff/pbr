@@ -32,7 +32,7 @@ PbrMaterial MakePbrMaterial() {
 // MakeMicroFacet constructs the micro facet object
 Microfacet MakeMicroFacet(in PbrMaterial pbr, vec3 pos, vec3 normal) {
     Microfacet micro;
-    micro.n = normal;
+    micro.n = normalize(normal); // make sure that normal is actually normalized
     micro.v = normalize(uCameraPos - pos);
     micro.l = normalize(uLightPos - pos);
     micro.h = normalize(micro.l + micro.v);
@@ -92,5 +92,5 @@ vec3 CalcG(in PbrMaterial pbr, in Microfacet micro) {
 }
 // CalcF calculates the surface reflectance for debugging.
 vec3 CalcF(in PbrMaterial pbr, in Microfacet micro) {
-    return FresnelSchlick(micro.v, micro.h, pbr.f0);
+    return FresnelSchlick(micro.v, micro.n, pbr.f0);
 }

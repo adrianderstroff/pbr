@@ -41,7 +41,7 @@ Another important property of PBR techniques is that materials have to obey the 
 
 Now one possible model to render PBR is the **reflectance equation**:
 <p align="center">
-<img src="https://latex.codecogs.com/png.latex?L_0(\mathbf{v})&space;=&space;\int_\Omega&space;f(\mathbf{l},&space;\mathbf{v})&space;L_i(\mathbf{l})&space;(\mathbf{n}&space;\cdot&space;\mathbf{l})&space;d&space;\omega_i" title="L_0(\mathbf{v}) = \int_\Omega f(\mathbf{l}, \mathbf{v}) L_i(\mathbf{l}) (\mathbf{n} \cdot \mathbf{l}) d \omega_i" />
+<img src="https://github.com/adrianderstroff/pbr/blob/master/assets/images/github/eq-reflectanceequation.png?raw=true" title="Reflectance Equation" />
 </p>
 
 Here *L<sub>0</sub>* is the sum of reflected **radiance** of a small patch of the surface in direction of the viewer **v**. 
@@ -90,7 +90,7 @@ The division of *π* comes from the fact, that we have to adhere to the conserva
 In short we want to make sure that the inequality 
 
 <p align="center">
-<img src="https://latex.codecogs.com/png.latex?\int_\Omega&space;\mathbf{c}_d&space;L_i&space;cos(\theta)&space;\delta&space;\omega&space;\le&space;L_i" title="\int_\Omega \mathbf{c}_d L_i cos(\theta) \delta \omega \le L_i" />
+<img src="https://github.com/adrianderstroff/pbr/blob/master/assets/images/github/eq-energyconservation.png?raw=true" title="Energy Conservation" />
 </p>
 
 holds true. To make things easier, we only taking the diffuse part of the BRDF into account and also keeping the view vector *v* constant, we only integrate over the outgoing rays *l*. As *c<sub>d</sub>* and *L<sub>i</sub>* are constant in terms of the outgoing ray *l* they can be written in front of the integral. Then *L<sub>i</sub>* can be divided on both sides of the inequality. So now we just need to integrate the cosine term over the hemisphere. Since its hard to integrate over the hemisphere we can instead integrate over the halfsphere in polar coordinates using two integrals with *φ = [0,2π]* and *θ = [0,π/2]*. After solving the integral we end up with *π c<sub>d</sub> <= 1*. The surface color *c* is defined in the range (0,0,0) to (1,1,1) thus we need to divide by *π* to fullfill the inequality and thus to obey the conservation of energy. 
@@ -100,7 +100,7 @@ holds true. To make things easier, we only taking the diffuse part of the BRDF i
 The specular term is a bit more complicated. It consists of three functions ***D***, ***F***, ***G*** and a normalization factor as shown below:
 
 <p align="center">
-<img src="https://latex.codecogs.com/png.latex?\dpi{100}&space;\small&space;\frac{\mathbf{D}&space;\mathbf{F}&space;\mathbf{G}}{4&space;(\mathbf{l}&space;\cdot&space;\mathbf{n})(\mathbf{v}&space;\cdot&space;\mathbf{n})}" title="\small \frac{\mathbf{D} \mathbf{F} \mathbf{G}}{4 (\mathbf{l} \cdot \mathbf{n})(\mathbf{v} \cdot \mathbf{n})}" />
+<img src="https://github.com/adrianderstroff/pbr/blob/master/assets/images/github/eq-specular.png?raw=true" title="Specular term" />
 </p>
 
 TODO: understand the normalization factor. Check the link http://www.pbr-book.org/3ed-2018/Reflection_Models/Microfacet_Models.html for potential explanation.
@@ -111,7 +111,7 @@ In the following all three functions are being discussed.
 
 ##### Normal Distribution Function
 
-The normal distribution function statistically approximates the distribution of microfacet normals with respect to the surface normal depending on the surface's roughness *α*. For a completely rough surface (*α = 1.0*) the microfacet normals are completely randomly displaced in all directions making the surface completely diffuse. On the other hand, a completetly smooth surface (*α = 0.0*) has all microfacet normals aligned to the surface normal, making it a perfect mirror. A property of the normal distribution function is that all function values have to add up to 1.
+The normal distribution function statistically approximates the distribution of microfacet normals with respect to the surface normal depending on the surface's roughness *α*. For a completely rough surface (*α = 1.0*) the microfacet normals are completely randomly displaced in all directions making the surface completely diffuse. On the other hand, a completetly smooth surface (*α = 0.0*) has all microfacet normals aligned to the surface normal, making it a perfect mirror. A property of the normal distribution function is that all function values have to add up to 1, since there cannot be more light reflected than received.
 
 http://www.reedbeta.com/blog/hows-the-ndf-really-defined/
 
