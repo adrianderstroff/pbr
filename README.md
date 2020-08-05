@@ -32,7 +32,7 @@ After getting all dependencies the project should work without any errors.
 PBR stands for **Physically Based Rendering** and describes rendering techniques that model how light interacts with a material or medium in a physically plausible manner.
 
 <p align="center">
-<img src="https://github.com/adrianderstroff/pbr/blob/master/assets/images/github/microfacet-model.png?raw=true" title="Microfacet Model" />
+<img src="assets/images/github/microfacet-model.png?raw=true" title="Microfacet Model" />
 </p>
 
 An important component of PBR is the **microfacet model**. Basically each surface can be described as microscopic perfect mirrors (**microfacets**). Depending on how the microfacets are aligned to each other, different kinds of surfaces can be modelled. A microfacet is described by its normal **h**. Are the normals of all microfacets parallel to each other, then the surface is completetly smooth and behaves like a perfect mirror. Are however the microfacet normals distributed in all directions then the surface is really rough as light is scattered in all directions.
@@ -41,7 +41,7 @@ Another important property of PBR techniques is that materials have to obey the 
 
 Now one possible model to render PBR is the **reflectance equation**:
 <p align="center">
-<img src="https://github.com/adrianderstroff/pbr/blob/master/assets/images/github/eq-reflectanceequation.png?raw=true" title="Reflectance Equation" />
+<img src="assets/images/github/eq-reflectanceequation.png?raw=true" title="Reflectance Equation" />
 </p>
 
 Here *L<sub>0</sub>* is the sum of reflected **radiance** of a small patch of the surface in direction of the viewer **v**. 
@@ -90,7 +90,7 @@ The division of *π* comes from the fact, that we have to adhere to the conserva
 In short we want to make sure that the inequality 
 
 <p align="center">
-<img src="https://github.com/adrianderstroff/pbr/blob/master/assets/images/github/eq-energyconservation.png?raw=true" title="Energy Conservation" />
+<img src="assets/images/github/eq-energyconservation.png?raw=true" title="Energy Conservation" />
 </p>
 
 holds true. To make things easier, we are only taking the diffuse part of the BRDF into account and also keeping the view vector *v* constant, we only integrate over the outgoing rays *l*. As *c<sub>d</sub>* and *L<sub>i</sub>* are constant in terms of the outgoing ray *l* they can be written in front of the integral. Then *L<sub>i</sub>* can be divided on both sides of the inequality. So now we just need to integrate the cosine term over the hemisphere. Since its hard to integrate over the hemisphere we can instead integrate over the halfsphere in polar coordinates using two integrals with *φ = [0,2π]* and *θ = [0,π/2]*. After solving the integral we end up with *π c<sub>d</sub> <= 1*. The surface color *c* is defined in the range (0,0,0) to (1,1,1) thus we need to divide by *π* to fullfill the inequality and thus to obey the conservation of energy. 
@@ -100,7 +100,7 @@ holds true. To make things easier, we are only taking the diffuse part of the BR
 The specular term is a bit more complicated. It consists of three functions ***D***, ***F***, ***G*** and a normalization factor as shown below:
 
 <p align="center">
-<img src="https://github.com/adrianderstroff/pbr/blob/master/assets/images/github/eq-specular.png?raw=true" title="Specular term" />
+<img src="assets/images/github/eq-specular.png?raw=true" title="Specular term" />
 </p>
 
 TODO: understand the normalization factor. Check the link http://www.pbr-book.org/3ed-2018/Reflection_Models/Microfacet_Models.html for potential explanation.
@@ -116,7 +116,7 @@ The normal distribution function statistically approximates the distribution of 
 The used normal distribution function is called the Trowbridge-Reitz GGX. It takes the normal **n** of the surface, the halfway vector **h** that is calculated as **h**=(**l**+**v**)/||(**l**+**v**)||, so the vector between the normalized direction to the light **l** and the normalized direction to the viewer **v**. The parameter *α* describes the roughness of the surface, with *α=0* being completely smooth and *α=1* being completely rough.
 
 <p align="center">
-<img src="https://github.com/adrianderstroff/pbr/blob/master/assets/images/github/eq-ndf.png?raw=true" title="Normal Distribution Function" />
+<img src="assets/images/github/eq-ndf.png?raw=true" title="Normal Distribution Function" />
 </p>
 
 Below are results of the simple pbr model, that uses a direct light source and the same parameters for the whole mesh. Only the roughness was varied while the other parameters were kept static. For smaller values of *α* the surface shows a small highlight while the rest of the surface is black. This is because the microfacets are more aligned towards the surface normal behaving more like a mirror. 
@@ -126,13 +126,13 @@ Higher values of *α* however are randomly distributed with respect to the surfa
 http://www.reedbeta.com/blog/hows-the-ndf-really-defined/
 
 <p align="center">
-<img src="https://github.com/adrianderstroff/pbr/blob/master/assets/images/github/ndf-images.png?raw=true" title="Normal Distribution Function - roughness variation" />
+<img src="assets/images/github/ndf-images.png?raw=true" title="Normal Distribution Function - roughness variation" />
 </p>
 
 | | | |
 |-|-|-|
-|<img src="https://github.com/adrianderstroff/pbr/blob/master/assets/images/github/D00.png?raw=true" title="Microfacet Model" />|<img src="https://github.com/adrianderstroff/pbr/blob/master/assets/images/github/D02.png?raw=true" title="Microfacet Model" />|<img src="https://github.com/adrianderstroff/pbr/blob/master/assets/images/github/D04.png?raw=true" title="Microfacet Model" />|
-|<img src="https://github.com/adrianderstroff/pbr/blob/master/assets/images/github/D06.png?raw=true" title="Microfacet Model" />|<img src="https://github.com/adrianderstroff/pbr/blob/master/assets/images/github/D08.png?raw=true" title="Microfacet Model" />|<img src="https://github.com/adrianderstroff/pbr/blob/master/assets/images/github/D10.png?raw=true" title="Microfacet Model" />|
+|<img src="assets/images/github/D00.png?raw=true" title="Microfacet Model" />|<img src="assets/images/github/D02.png?raw=true" title="Microfacet Model" />|<img src="assets/images/github/D04.png?raw=true" title="Microfacet Model" />|
+|<img src="assets/images/github/D06.png?raw=true" title="Microfacet Model" />|<img src="assets/images/github/D08.png?raw=true" title="Microfacet Model" />|<img src="assets/images/github/D10.png?raw=true" title="Microfacet Model" />|
 
 ##### Geometry Function *G*
 
@@ -140,15 +140,15 @@ test http://www.codinglabs.net/article_physically_based_rendering_cook_torrance.
 
 | | | |
 |-|-|-|
-|<img src="https://github.com/adrianderstroff/pbr/blob/master/assets/images/github/G00.png?raw=true" title="Microfacet Model" />|<img src="https://github.com/adrianderstroff/pbr/blob/master/assets/images/github/G02.png?raw=true" title="Microfacet Model" />|<img src="https://github.com/adrianderstroff/pbr/blob/master/assets/images/github/G04.png?raw=true" title="Microfacet Model" />|
-|<img src="https://github.com/adrianderstroff/pbr/blob/master/assets/images/github/G06.png?raw=true" title="Microfacet Model" />|<img src="https://github.com/adrianderstroff/pbr/blob/master/assets/images/github/G08.png?raw=true" title="Microfacet Model" />|<img src="https://github.com/adrianderstroff/pbr/blob/master/assets/images/github/G10.png?raw=true" title="Microfacet Model" />|
+|<img src="assets/images/github/G00.png?raw=true" title="Microfacet Model" />|<img src="assets/images/github/G02.png?raw=true" title="Microfacet Model" />|<img src="assets/images/github/G04.png?raw=true" title="Microfacet Model" />|
+|<img src="assets/images/github/G06.png?raw=true" title="Microfacet Model" />|<img src="assets/images/github/G08.png?raw=true" title="Microfacet Model" />|<img src="assets/images/github/G10.png?raw=true" title="Microfacet Model" />|
 
 ##### Fresnel Reflection *F*
 
 | | | |
 |-|-|-|
-|<img src="https://github.com/adrianderstroff/pbr/blob/master/assets/images/github/F00.png?raw=true" title="Microfacet Model" />|<img src="https://github.com/adrianderstroff/pbr/blob/master/assets/images/github/F02.png?raw=true" title="Microfacet Model" />|<img src="https://github.com/adrianderstroff/pbr/blob/master/assets/images/github/F04.png?raw=true" title="Microfacet Model" />|
-|<img src="https://github.com/adrianderstroff/pbr/blob/master/assets/images/github/F06.png?raw=true" title="Microfacet Model" />|<img src="https://github.com/adrianderstroff/pbr/blob/master/assets/images/github/F08.png?raw=true" title="Microfacet Model" />|<img src="https://github.com/adrianderstroff/pbr/blob/master/assets/images/github/F10.png?raw=true" title="Microfacet Model" />|
+|<img src="assets/images/github/F00.png?raw=true" title="Microfacet Model" />|<img src="assets/images/github/F02.png?raw=true" title="Microfacet Model" />|<img src="assets/images/github/F04.png?raw=true" title="Microfacet Model" />|
+|<img src="assets/images/github/F06.png?raw=true" title="Microfacet Model" />|<img src="assets/images/github/F08.png?raw=true" title="Microfacet Model" />|<img src="assets/images/github/F10.png?raw=true" title="Microfacet Model" />|
 
 ## Acknowledgement
 
