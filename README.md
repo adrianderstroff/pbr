@@ -125,6 +125,8 @@ Higher values of *α* however are randomly distributed with respect to the surfa
 
 http://www.reedbeta.com/blog/hows-the-ndf-really-defined/
 
+To results can be found in the project cmd/pbr-test/ to play around with all parameters.
+
 <p align="center">
 <img src="assets/images/github/ndf-images.png?raw=true" title="Normal Distribution Function - roughness variation" />
 </p>
@@ -136,7 +138,19 @@ http://www.reedbeta.com/blog/hows-the-ndf-really-defined/
 
 ##### Geometry Function *G*
 
+The geometry function also utilizes the microfacet model to statistically determine if the light reaches the viewer. Thereby two cases have to be taken into consideration. The first case determines if the light gets trapped in the surface, the second case determines if the reflected ray gets obstructed by a microfacet and thus not reaches the viewer. In both cases the function dependends on the angle between the surface normal **n** and the normalized light direction **l** and the angle between **n** and the normalized view direction **v** respectively as well as a roughness *k*. 
+
+Depending on which approach (either direct lighting or image based lighting) different values of the roughness *k* are being used. To model the geometry term a combination of GGX and Schlick-Beckmann was employed. For this model the following roughness values *k<sub>direct</sub>* for direct lighting and *k<sub>ibl</sub>* for image based lighting were used.
+
+<p align="center">
+<img src="assets/images/github/eq-roughness-k.png?raw=true" title="Calculation of the roughness term k" />
+</p>
+
 test http://www.codinglabs.net/article_physically_based_rendering_cook_torrance.aspx
+
+<p align="center">
+<img src="assets/images/github/geom-images.png?raw=true" title="Normal Distribution Function - roughness variation" />
+</p>
 
 | | | |
 |-|-|-|
@@ -155,6 +169,10 @@ test http://www.codinglabs.net/article_physically_based_rendering_cook_torrance.
 ### Obj Models
 
 The models *bunny.obj* and *dragon.obj* are popular reconstructed models of scans taken from the [Stanford 3D Scanning repository](http://graphics.stanford.edu/data/3Dscanrep/).
+
+### Rusted Iron Texture
+
+The textures in assets/textures/material1/ are all except for *ao.png* taken from [freepbr](https://freepbr.com/materials/rusted-iron-pbr-metal-material/).
 
 ### Gun Model and Textures
 

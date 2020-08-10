@@ -17,7 +17,7 @@ import (
 
 const (
 	SHADER_PATH  = "./assets/shaders/"
-	TEX_PATH     = "./assets/images/textures/material4/"
+	TEX_PATH     = "./assets/images/textures/material1/"
 	CUBEMAP_PATH = "./assets/images/cubemap/hdr/"
 	OBJ_PATH     = "./assets/objects/"
 	OUT_PATH     = "./"
@@ -57,6 +57,8 @@ func main() {
 
 	// make passes
 	pbrpass := MakePbrPass(WIDTH, HEIGHT, SHADER_PATH, TEX_PATH, OBJ_PATH)
+	envpass := MakeCubemapPass(SHADER_PATH, CUBEMAP_PATH)
+	iblpass := MakeIblPass(WIDTH, HEIGHT, SHADER_PATH, TEX_PATH, &envpass.cubemap)
 	sunpass := MakeSunPass(WIDTH, HEIGHT, SHADER_PATH)
 
 	// setup gui
@@ -66,17 +68,27 @@ func main() {
 
 	// init state
 	state := State{
-		imageidx:       0,
-		albedo:         mgl32.Vec4{1, 1, 1, 1},
-		roughness:      1.0,
-		metalness:      0.0,
-		lightpos:       mgl32.Vec3{10, 10, 10},
-		lightintensity: mgl32.Vec3{100, 100, 100},
-		angle:          62.0,
-		wireframe:      false,
-		normal:         false,
-		bgcolor:        mgl32.Vec4{0.6, 0.6, 0.6, 1.0},
+		imageidx:        0,
+		albedo:          mgl32.Vec4{1, 1, 1, 1},
+		roughness:       1.0,
+		metalness:       0.0,
+		lightpos:        mgl32.Vec3{10, 10, 10},
+		lightintensity:  mgl32.Vec3{100, 100, 100},
+		angle:           62.0,
+		samples:         10,
+		globalroughness: 0.0,
+		wireframe:       false,
+		normal:          false,
+		ibl:             false,
+		bgcolor:         mgl32.Vec4{0.6, 0.6, 0.6, 1.0},
 	}
+
+	// set up options for the different displayable textures
+	imgs := []string{"color", "diffuse", "specular", "ndf", "geometry", "fresnel"}
+	images := imgs[:]
+	mods := []string{"direct", "ibl"}
+	modes := mods[:]
+	var modeidx int32 = 0
 
 	// render loop
 	renderloop := func() {
@@ -98,40 +110,63 @@ func main() {
 		if state.wireframe {
 			gl.Wireframe()
 		}
-		pbrpass.SetState(state)
-		pbrpass.Render(&camera)
 
-		// execute sun path
-		sunpass.SetState(state)
-		sunpass.Render(&camera)
-		if state.wireframe {
-			gl.Fill()
+		// execute environment map pass if enabled
+		if state.ibl {
+			// execute pbr pass
+			iblpass.SetState(state)
+			iblpass.Render(&camera)
+
+			// execute environmap pass
+			envpass.Render(&camera)
+		} else {
+			// execute pbr pass
+			pbrpass.SetState(state)
+			pbrpass.Render(&camera)
+
+			// execute sun path
+			sunpass.SetState(state)
+			sunpass.Render(&camera)
+			if state.wireframe {
+				gl.Fill()
+			}
 		}
-
-		// set up options for the different displayable textures
-		imgs := []string{"color", "diffuse", "specular", "ndf", "geometry", "fresnel"}
-		images := imgs[:]
 
 		// render GUI
 		gui.Begin()
-		if open := gui.BeginWindow("Options", 0, 0, 250, 615); open {
-			if open := gui.BeginGroup("Render", 100); open {
+		if open := gui.BeginWindow("Options", 0, 0, 250, float32(HEIGHT)); open {
+			if open := gui.BeginGroup("Render", 105); open {
+				gui.Selector("mode", modes, &modeidx)
 				gui.Selector("display", images, &state.imageidx)
-				gui.ColorPicker("background", &state.bgcolor)
 				gui.EndGroup()
 			}
+			state.ibl = modeidx == 1
 
-			if open := gui.BeginGroup("Material", 135); open {
-				gui.ColorPicker("albedo", &state.albedo)
-				gui.SliderFloat32("roughness", &state.roughness, 0, 1, 0.1)
-				gui.SliderFloat32("metalness", &state.metalness, 0, 1, 0.1)
-				gui.EndGroup()
-			}
+			if !state.ibl {
 
-			if open := gui.BeginGroup("Light", 200); open {
-				gui.Slider3("color", &state.lightintensity, 0, 100, 1)
-				gui.SliderFloat32("angle", &state.angle, 0, 360, 1.0)
-				gui.EndGroup()
+				if open := gui.BeginGroup("Other", 65); open {
+					gui.ColorPicker("background", &state.bgcolor)
+					gui.EndGroup()
+				}
+
+				if open := gui.BeginGroup("Material", 135); open {
+					gui.ColorPicker("albedo", &state.albedo)
+					gui.SliderFloat32("roughness", &state.roughness, 0, 1, 0.1)
+					gui.SliderFloat32("metalness", &state.metalness, 0, 1, 0.1)
+					gui.EndGroup()
+				}
+
+				if open := gui.BeginGroup("Light", 200); open {
+					gui.Slider3("color", &state.lightintensity, 0, 100, 1)
+					gui.SliderFloat32("angle", &state.angle, 0, 360, 1.0)
+					gui.EndGroup()
+				}
+			} else {
+				if open := gui.BeginGroup("Mat", 135); open {
+					gui.SliderFloat32("glob roughness", &state.globalroughness, 0, 1, 0.1)
+					gui.SliderInt32("samples", &state.samples, 1, 50, 1)
+					gui.EndGroup()
+				}
 			}
 
 			if open := gui.BeginGroup("Debug", 140); open {
@@ -164,8 +199,13 @@ type State struct {
 	lightintensity mgl32.Vec3
 	angle          float32
 
+	// ibl
+	samples         int32
+	globalroughness float32
+
 	// debug
 	wireframe bool
 	normal    bool
+	ibl       bool
 	bgcolor   mgl32.Vec4
 }
